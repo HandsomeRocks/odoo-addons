@@ -19,3 +19,13 @@ class TestNote(models.Model):
         default="info",
     )
     is_resolved = fields.Boolean(string="Resolved", default=False)
+
+    priority = fields.Selection(
+        [
+            ("0", "Normal"),
+            ("1", "Important"),
+            ("2", "Urgent"),
+        ],
+        string="Priority",
+        default="0",
+    )
