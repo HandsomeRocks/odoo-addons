@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Tree view -->
+    <record id="view_staging_test_note_tree" model="ir.ui.view">
+        <field name="name">staging.test.note.tree</field>
+        <field name="model">staging.test.note</field>
+        <field name="arch" type="xml">
+            <tree decoration-muted="is_resolved">
+                <field name="name"/>
+                <field name="tag" widget="badge"
+                       decoration-info="tag == 'info'"
+                       decoration-success="tag == 'success'"
+                       decoration-warning="tag == 'warning'"
+                       decoration-danger="tag == 'bug'"/>
+                <field name="is_resolved"/>
+                <field name="create_date"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form view -->
+    <record id="view_staging_test_note_form" model="ir.ui.view">
+        <field name="name">staging.test.note.form</field>
+        <field name="model">staging.test.note</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <field name="tag" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="Note title..."/></h1>
+                    </div>
+                    <group>
+                        <field name="is_resolved"/>
+                    </group>
+                    <notebook>
+                        <page string="Content">
+                            <field name="content" placeholder="Write your test note here..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_staging_test_note" model="ir.actions.act_window">
+        <field name="name">Test Notes</field>
+        <field name="res_model">staging.test.note</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first test note
+            </p>
+            <p>
+                This module was deployed by the Odoo Staging Manager.
+                If you can see this, custom addons are loading correctly!
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu -->
+    <menuitem id="menu_staging_test_root"
+              name="Staging Test"
+              sequence="999"/>
+
+    <menuitem id="menu_staging_test_notes"
+              name="Test Notes"
+              parent="menu_staging_test_root"
+              action="action_staging_test_note"
+              sequence="10"/>
+
+</odoo>
