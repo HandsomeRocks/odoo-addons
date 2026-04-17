@@ -1,5 +1,5 @@
 import logging
-from base64 import b64encode
+from datetime import datetime
 
 import requests
 
@@ -241,6 +241,17 @@ class StagingInstance(models.Model):
             vals["remote_id"] = data["id"]
             return self.create(vals)
 
+    @staticmethod
+    def _parse_iso_dt(value):
+        """Convert ISO 8601 datetime string to Odoo-compatible format."""
+        if not value:
+            return False
+        try:
+            dt = datetime.fromisoformat(value)
+            return dt.strftime("%Y-%m-%d %H:%M:%S")
+        except (ValueError, TypeError):
+            return False
+
     @api.model
     def _map_api_to_vals(self, data):
         return {
@@ -262,8 +273,8 @@ class StagingInstance(models.Model):
             "upgrade_modules": data.get("upgrade_modules") or "",
             "build_log": data.get("build_log") or "",
             "error_message": data.get("error_message") or "",
-            "remote_created_at": data.get("created_at") or False,
-            "remote_updated_at": data.get("updated_at") or False,
+            "remote_created_at": self._parse_iso_dt(data.get("created_at")),
+            "remote_updated_at": self._parse_iso_dt(data.get("updated_at")),
         }
 
     # ── Instance actions ──────────────────────────────────────────────────
