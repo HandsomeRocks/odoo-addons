@@ -19,9 +19,9 @@
     "data": [
         "security/ir.model.access.csv",
         "data/ir_cron.xml",
-        "wizard/create_instance_views.xml",
         "views/staging_instance_views.xml",
         "views/res_config_settings_views.xml",
+        "wizard/create_instance_views.xml",
         "views/menus.xml",
     ],
     "installable": True,

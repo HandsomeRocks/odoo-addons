@@ -13,6 +13,13 @@
               action="action_staging_instance"
               sequence="10"/>
 
+    <!-- Create instance wizard -->
+    <menuitem id="menu_create_instance"
+              name="Create Instance"
+              parent="menu_staging_manager_root"
+              action="action_create_instance_wizard"
+              sequence="20"/>
+
     <!-- Configuration menu group -->
     <menuitem id="menu_staging_config"
               name="Configuration"

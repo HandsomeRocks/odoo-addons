@@ -33,11 +33,4 @@
         <field name="target">new</field>
     </record>
 
-    <!-- Toolbar button in instances view header -->
-    <menuitem id="menu_create_instance"
-              name="Create Instance"
-              parent="menu_staging_manager_root"
-              action="action_create_instance_wizard"
-              sequence="20"/>
-
 </odoo>
