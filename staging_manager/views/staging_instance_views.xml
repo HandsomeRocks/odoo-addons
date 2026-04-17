@@ -37,15 +37,15 @@
                                     </div>
                                 </div>
                                 <div class="text-muted small mb-1">
-                                    <i class="fa fa-code-fork me-1"/>
+                                    <i class="fa fa-code-fork me-1" title="Branch"/>
                                     <field name="branch_name"/>
                                 </div>
                                 <div t-if="record.git_commit.raw_value" class="text-muted small mb-1">
-                                    <i class="fa fa-hashtag me-1"/>
+                                    <i class="fa fa-hashtag me-1" title="Commit"/>
                                     <t t-out="record.git_commit.raw_value.substring(0,8)"/>
                                 </div>
                                 <div t-if="record.test_status.raw_value" class="small mb-1">
-                                    <i class="fa fa-flask me-1"/>
+                                    <i class="fa fa-flask me-1" title="Tests"/>
                                     Tests:
                                     <field name="test_status" widget="badge"
                                            decoration-success="test_status == 'passed'"
@@ -60,14 +60,14 @@
                                         <a t-if="record.url.raw_value"
                                            t-att-href="record.url.raw_value"
                                            target="_blank" class="btn btn-sm btn-link p-0 me-2"
-                                           title="Open Instance">
-                                            <i class="fa fa-external-link"/>
+                                           role="button" title="Open Instance">
+                                            <i class="fa fa-external-link" title="Open Instance"/>
                                         </a>
                                         <a t-if="record.pr_url.raw_value"
                                            t-att-href="record.pr_url.raw_value"
                                            target="_blank" class="btn btn-sm btn-link p-0"
-                                           title="Open PR">
-                                            <i class="fa fa-github"/>
+                                           role="button" title="Open PR">
+                                            <i class="fa fa-github" title="Open PR"/>
                                         </a>
                                     </div>
                                 </div>
