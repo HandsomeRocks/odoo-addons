@@ -96,6 +96,12 @@ class StagingInstance(models.Model):
     build_log = fields.Text(string="Build Log", readonly=True)
     error_message = fields.Text(string="Error Message", readonly=True)
 
+    # Production flag
+    is_production = fields.Boolean(
+        string="Production", default=False, readonly=True,
+        help="This record represents the production/main instance, not a staging branch.",
+    )
+
     # Timestamps from the manager
     remote_created_at = fields.Datetime(string="Created (Remote)", readonly=True)
     remote_updated_at = fields.Datetime(string="Updated (Remote)", readonly=True)
@@ -116,10 +122,12 @@ class StagingInstance(models.Model):
         for rec in self:
             rec.test_status_color = TEST_STATUS_COLORS.get(rec.test_status, 0)
 
-    @api.depends("label", "branch_name")
+    @api.depends("label", "branch_name", "is_production")
     def _compute_display_name(self):
         for rec in self:
-            if rec.label:
+            if rec.is_production:
+                rec.display_name = f"\u26a1 PRODUCTION ({rec.branch_name or 'main'})"
+            elif rec.label:
                 rec.display_name = f"{rec.label} ({rec.branch_name})"
             else:
                 rec.display_name = rec.branch_name or "New Instance"
@@ -192,11 +200,45 @@ class StagingInstance(models.Model):
         orphans = self.search([
             ("remote_id", "!=", False),
             ("remote_id", "not in", list(remote_ids)),
+            ("is_production", "=", False),
         ])
         if orphans:
             orphans.unlink()
 
+        self._sync_production()
         return True
+
+    @api.model
+    def _sync_production(self):
+        """Fetch production instance info from the manager and upsert locally."""
+        try:
+            data = self._api_get("/api/production")
+        except Exception as e:
+            _logger.warning("Could not fetch production info: %s", e)
+            return
+        if not data.get("configured"):
+            return
+
+        existing = self.search([("is_production", "=", True)], limit=1)
+        vals = {
+            "branch_name": data.get("branch") or "main",
+            "slug": "production",
+            "label": "Production",
+            "status": data.get("status") or "stopped",
+            "url": data.get("url") or "",
+            "db_name": data.get("db_name") or "",
+            "git_commit": data.get("commit") or "",
+            "build_log": data.get("build_log") or "",
+            "test_status": data.get("test_status") or False,
+            "test_log": data.get("test_log") or "",
+            "init_modules": data.get("init_modules") or "",
+            "upgrade_modules": data.get("upgrade_modules") or "",
+            "is_production": True,
+        }
+        if existing:
+            existing.write(vals)
+        else:
+            self.create(vals)
 
     @api.model
     def _cron_sync(self):
