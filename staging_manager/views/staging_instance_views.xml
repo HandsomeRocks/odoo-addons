@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ─── Kanban View ──────────────────────────────────────────────── -->
+    <record id="view_staging_instance_kanban" model="ir.ui.view">
+        <field name="name">staging.instance.kanban</field>
+        <field name="model">staging.instance</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="status" class="o_kanban_small_column"
+                    quick_create="false" group_create="false"
+                    group_delete="false" group_edit="false"
+                    records_draggable="false">
+                <field name="status"/>
+                <field name="status_color"/>
+                <field name="test_status"/>
+                <field name="test_status_color"/>
+                <field name="url"/>
+                <field name="pr_url"/>
+                <field name="branch_name"/>
+                <field name="label"/>
+                <field name="git_commit"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div t-attf-class="oe_kanban_card oe_kanban_global_click">
+                            <div class="oe_kanban_content">
+                                <div class="o_kanban_record_top mb-1">
+                                    <div class="o_kanban_record_headings">
+                                        <strong class="o_kanban_record_title">
+                                            <field name="display_name"/>
+                                        </strong>
+                                    </div>
+                                    <div class="o_kanban_record_top_right">
+                                        <field name="status" widget="badge"
+                                               decoration-success="status == 'running'"
+                                               decoration-warning="status in ('pending', 'building', 'updating')"
+                                               decoration-danger="status in ('error', 'stopped', 'destroying')"/>
+                                    </div>
+                                </div>
+                                <div class="text-muted small mb-1">
+                                    <i class="fa fa-code-fork me-1" title="Branch"/>
+                                    <field name="branch_name"/>
+                                </div>
+                                <div t-if="record.git_commit.raw_value" class="text-muted small mb-1">
+                                    <i class="fa fa-hashtag me-1" title="Commit"/>
+                                    <t t-out="record.git_commit.raw_value.substring(0,8)"/>
+                                </div>
+                                <div t-if="record.test_status.raw_value" class="small mb-1">
+                                    <i class="fa fa-flask me-1" title="Tests"/>
+                                    Tests:
+                                    <field name="test_status" widget="badge"
+                                           decoration-success="test_status == 'passed'"
+                                           decoration-danger="test_status == 'failed'"
+                                           decoration-warning="test_status == 'running'"/>
+                                </div>
+                                <div class="o_kanban_record_bottom mt-2">
+                                    <div class="oe_kanban_bottom_left text-muted small">
+                                        <field name="create_date" widget="date"/>
+                                    </div>
+                                    <div class="oe_kanban_bottom_right">
+                                        <a t-if="record.url.raw_value"
+                                           t-att-href="record.url.raw_value"
+                                           target="_blank" class="btn btn-sm btn-link p-0 me-2"
+                                           role="button" title="Open Instance">
+                                            <i class="fa fa-external-link" title="Open Instance"/>
+                                        </a>
+                                        <a t-if="record.pr_url.raw_value"
+                                           t-att-href="record.pr_url.raw_value"
+                                           target="_blank" class="btn btn-sm btn-link p-0"
+                                           role="button" title="Open PR">
+                                            <i class="fa fa-github" title="Open PR"/>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- ─── Tree View ────────────────────────────────────────────────── -->
+    <record id="view_staging_instance_tree" model="ir.ui.view">
+        <field name="name">staging.instance.tree</field>
+        <field name="model">staging.instance</field>
+        <field name="arch" type="xml">
+            <tree decoration-muted="status == 'destroying'"
+                  decoration-danger="status == 'error'"
+                  decoration-success="status == 'running'">
+                <field name="branch_name"/>
+                <field name="label" optional="show"/>
+                <field name="status" widget="badge"
+                       decoration-success="status == 'running'"
+                       decoration-warning="status in ('pending', 'building', 'updating')"
+                       decoration-danger="status in ('error', 'stopped', 'destroying')"/>
+                <field name="url" widget="url"/>
+                <field name="db_source" optional="hide"/>
+                <field name="git_commit" optional="show" string="Commit"/>
+                <field name="test_status" widget="badge" optional="show"
+                       decoration-success="test_status == 'passed'"
+                       decoration-danger="test_status == 'failed'"
+                       decoration-warning="test_status == 'running'"/>
+                <field name="pr_number" optional="hide"/>
+                <field name="remote_updated_at" string="Last Update" optional="show"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- ─── Form View ────────────────────────────────────────────────── -->
+    <record id="view_staging_instance_form" model="ir.ui.view">
+        <field name="name">staging.instance.form</field>
+        <field name="model">staging.instance</field>
+        <field name="arch" type="xml">
+            <form create="false">
+                <header>
+                    <button name="action_start" type="object"
+                            string="Start" class="btn-primary"
+                            invisible="status != 'stopped'"
+                            confirm="Start this instance?"/>
+                    <button name="action_stop" type="object"
+                            string="Stop" class="btn-warning"
+                            invisible="status != 'running'"
+                            confirm="Stop this instance?"/>
+                    <button name="action_rebuild" type="object"
+                            string="Rebuild" class="btn-secondary"
+                            invisible="status in ('building', 'updating', 'destroying')"
+                            confirm="This will destroy and re-create the instance from production. Continue?"/>
+                    <button name="action_update" type="object"
+                            string="Pull &amp; Restart" class="btn-secondary"
+                            invisible="status != 'running'"/>
+                    <button name="action_run_tests" type="object"
+                            string="Run Tests" class="btn-secondary"
+                            icon="fa-flask"
+                            invisible="status != 'running'"/>
+                    <button name="action_destroy" type="object"
+                            string="Destroy" class="btn-danger"
+                            invisible="status in ('building', 'updating', 'destroying')"
+                            confirm="Permanently destroy this instance? This cannot be undone."/>
+                    <field name="status" widget="statusbar"
+                           statusbar_visible="pending,building,running"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_open_url" type="object"
+                                class="oe_stat_button" icon="fa-external-link"
+                                invisible="not url">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Open Instance</span>
+                            </div>
+                        </button>
+                        <button name="action_open_pr" type="object"
+                                class="oe_stat_button" icon="fa-github"
+                                invisible="not pr_url">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value"><field name="pr_number"/></span>
+                                <span class="o_stat_text">Pull Request</span>
+                            </div>
+                        </button>
+                        <button name="action_view_logs" type="object"
+                                class="oe_stat_button" icon="fa-file-text-o">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">View Logs</span>
+                            </div>
+                        </button>
+                        <button name="action_refresh" type="object"
+                                class="oe_stat_button" icon="fa-refresh">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Refresh</span>
+                            </div>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="display_name"/></h1>
+                    </div>
+                    <group>
+                        <group string="Instance">
+                            <field name="branch_name"/>
+                            <field name="slug"/>
+                            <field name="label"/>
+                            <field name="url" widget="url"/>
+                            <field name="ticket_url" widget="url"/>
+                        </group>
+                        <group string="Technical">
+                            <field name="db_name"/>
+                            <field name="db_source"/>
+                            <field name="git_commit"/>
+                            <field name="remote_created_at"/>
+                            <field name="remote_updated_at"/>
+                        </group>
+                    </group>
+                    <group string="Modules" col="2">
+                        <field name="init_modules" placeholder="e.g. sale,purchase"/>
+                        <field name="upgrade_modules" placeholder="e.g. staging_test"/>
+                    </group>
+                    <notebook>
+                        <page string="Test Results" name="tests">
+                            <group>
+                                <field name="test_status" widget="badge"
+                                       decoration-success="test_status == 'passed'"
+                                       decoration-danger="test_status == 'failed'"
+                                       decoration-warning="test_status == 'running'"/>
+                            </group>
+                            <field name="test_log" readonly="1" widget="text"
+                                   placeholder="No test results yet. Click 'Run Tests' to start."/>
+                        </page>
+                        <page string="Build Log" name="build_log">
+                            <field name="build_log" readonly="1" widget="text"/>
+                        </page>
+                        <page string="Error" name="error"
+                              invisible="not error_message">
+                            <field name="error_message" readonly="1" widget="text"/>
+                        </page>
+                        <page string="Pull Request" name="pr_info"
+                              invisible="not pr_number">
+                            <group>
+                                <field name="pr_number"/>
+                                <field name="pr_url" widget="url"/>
+                                <field name="pr_state"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ─── Logs popup form (opened by action_view_logs) ─────────────── -->
+    <record id="view_staging_instance_logs_form" model="ir.ui.view">
+        <field name="name">staging.instance.logs.form</field>
+        <field name="model">staging.instance</field>
+        <field name="priority">99</field>
+        <field name="arch" type="xml">
+            <form create="false" edit="false">
+                <sheet>
+                    <h2><field name="display_name"/></h2>
+                    <notebook>
+                        <page string="Build Log">
+                            <field name="build_log" widget="text" readonly="1"/>
+                        </page>
+                        <page string="Test Log">
+                            <field name="test_log" widget="text" readonly="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ─── Search View ──────────────────────────────────────────────── -->
+    <record id="view_staging_instance_search" model="ir.ui.view">
+        <field name="name">staging.instance.search</field>
+        <field name="model">staging.instance</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="branch_name"/>
+                <field name="label"/>
+                <field name="slug"/>
+                <filter string="Running" name="running"
+                        domain="[('status', '=', 'running')]"/>
+                <filter string="Stopped" name="stopped"
+                        domain="[('status', '=', 'stopped')]"/>
+                <filter string="Building" name="building"
+                        domain="[('status', 'in', ['pending', 'building', 'updating'])]"/>
+                <filter string="Error" name="error"
+                        domain="[('status', '=', 'error')]"/>
+                <separator/>
+                <filter string="Tests Passed" name="tests_passed"
+                        domain="[('test_status', '=', 'passed')]"/>
+                <filter string="Tests Failed" name="tests_failed"
+                        domain="[('test_status', '=', 'failed')]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Status" name="group_status"
+                            context="{'group_by': 'status'}"/>
+                    <filter string="DB Source" name="group_db_source"
+                            context="{'group_by': 'db_source'}"/>
+                    <filter string="Test Status" name="group_test_status"
+                            context="{'group_by': 'test_status'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ─── Actions ──────────────────────────────────────────────────── -->
+    <record id="action_staging_instance" model="ir.actions.act_window">
+        <field name="name">Staging Instances</field>
+        <field name="res_model">staging.instance</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name="search_view_id" ref="view_staging_instance_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No staging instances found
+            </p>
+            <p>
+                Click <b>Sync Now</b> to fetch instances from the Staging Manager,
+                or <b>Create Instance</b> to spin up a new one.
+            </p>
+        </field>
+    </record>
+
+    <!-- Server action: Sync All (available from action menu) -->
+    <record id="action_sync_all_instances" model="ir.actions.server">
+        <field name="name">Sync from Manager</field>
+        <field name="model_id" ref="model_staging_instance"/>
+        <field name="binding_model_id" ref="model_staging_instance"/>
+        <field name="binding_view_types">list,kanban</field>
+        <field name="state">code</field>
+        <field name="code">model.action_sync_all()</field>
+    </record>
+
+</odoo>

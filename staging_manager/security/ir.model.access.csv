@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_staging_instance_user,staging.instance.user,model_staging_instance,base.group_user,1,0,0,0
+access_staging_instance_admin,staging.instance.admin,model_staging_instance,base.group_system,1,1,1,1
+access_create_wizard_admin,staging.instance.create.wizard.admin,model_staging_instance_create_wizard,base.group_system,1,1,1,1

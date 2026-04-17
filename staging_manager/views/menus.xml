@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Settings action (defined first so menuitem can reference it) -->
+    <record id="action_staging_settings" model="ir.actions.act_window">
+        <field name="name">Staging Manager Settings</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">inline</field>
+        <field name="context">{'module': 'staging_manager'}</field>
+    </record>
+
+    <!-- Top-level app menu -->
+    <menuitem id="menu_staging_manager_root"
+              name="Staging Manager"
+              sequence="90"/>
+
+    <!-- Instances sub-menu -->
+    <menuitem id="menu_staging_instances"
+              name="Instances"
+              parent="menu_staging_manager_root"
+              action="action_staging_instance"
+              sequence="10"/>
+
+    <!-- Create instance wizard -->
+    <menuitem id="menu_create_instance"
+              name="Create Instance"
+              parent="menu_staging_manager_root"
+              action="action_create_instance_wizard"
+              sequence="20"/>
+
+    <!-- Configuration menu group -->
+    <menuitem id="menu_staging_config"
+              name="Configuration"
+              parent="menu_staging_manager_root"
+              sequence="90"
+              groups="base.group_system"/>
+
+    <menuitem id="menu_staging_settings"
+              name="Settings"
+              parent="menu_staging_config"
+              action="action_staging_settings"
+              sequence="10"
+              groups="base.group_system"/>
+
+</odoo>
