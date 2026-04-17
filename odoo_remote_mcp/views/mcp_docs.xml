@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="mcp_docs" name="MCP Documentation">
+        <t t-call="web.layout">
+            <t t-set="head">
+                <link rel="stylesheet" href="/web/static/lib/bootstrap/css/bootstrap.css"/>
+                <style>
+                    body { background-color: #f8f9fa; }
+                    .card { border: none; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+                    .tool-badge { font-size: 0.7rem; padding: 0.15rem 0.4rem; margin-left: 0.5rem; }
+                </style>
+            </t>
+            <div class="container py-5" style="max-width: 900px;">
+                <div class="text-center mb-4">
+                    <img src="/web/static/img/logo.png" alt="Odoo" style="max-height: 50px;"/>
+                </div>
+                <h1 class="mb-2 text-center">
+                    <t t-esc="server_name"/>
+                </h1>
+                <p class="text-center text-muted mb-4">AI App &amp; EChart Builder</p>
+
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <p class="mb-3">
+                            Build React web applications, interactive dashboards, and automate workflows
+                            with AI agents like Claude, Gemini, and ChatGPT.
+                        </p>
+                        <table class="table table-sm mb-0">
+                            <tbody>
+                                <tr>
+                                    <td class="text-muted" style="width: 40%;">MCP Endpoint</td>
+                                    <td><code><t t-esc="base_url"/>/mcp</code></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">OAuth Discovery</td>
+                                    <td><code><t t-esc="base_url"/>/.well-known/oauth-protected-resource</code></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Protocol Version</td>
+                                    <td>2025-11-25</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Tools Available</td>
+                                    <td>17</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header bg-white">
+                        <strong>Available Tools</strong>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <small class="text-muted">Discovery</small>
+                                <ul class="mb-3">
+                                    <li><code>list_models</code> <span class="badge bg-secondary tool-badge">read</span></li>
+                                    <li><code>get_model_schema</code> <span class="badge bg-secondary tool-badge">read</span></li>
+                                </ul>
+                                <small class="text-muted">Data Operations</small>
+                                <ul class="mb-3">
+                                    <li><code>search_read</code> <span class="badge bg-secondary tool-badge">read</span></li>
+                                    <li><code>read_record</code> <span class="badge bg-secondary tool-badge">read</span></li>
+                                    <li><code>read_group</code> <span class="badge bg-secondary tool-badge">read</span></li>
+                                    <li><code>create_record</code> <span class="badge bg-warning text-dark tool-badge">write</span></li>
+                                    <li><code>update_record</code> <span class="badge bg-warning text-dark tool-badge">write</span></li>
+                                    <li><code>delete_record</code> <span class="badge bg-warning text-dark tool-badge">write</span></li>
+                                    <li><code>execute_method</code> <span class="badge bg-warning text-dark tool-badge">write</span></li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <small class="text-muted">Code Access</small>
+                                <ul class="mb-3">
+                                    <li><code>code_search</code> <span class="badge bg-secondary tool-badge">read</span></li>
+                                    <li><code>code_read</code> <span class="badge bg-secondary tool-badge">read</span></li>
+                                    <li><code>search_webapp_code</code> <span class="badge bg-secondary tool-badge">read</span></li>
+                                    <li><code>search_module_code</code> <span class="badge bg-secondary tool-badge">read</span></li>
+                                </ul>
+                                <small class="text-muted">Advanced</small>
+                                <ul class="mb-3">
+                                    <li><code>execute_orm</code> <span class="badge bg-danger tool-badge">execute</span></li>
+                                </ul>
+                                <small class="text-muted">App Builders</small>
+                                <ul class="mb-0">
+                                    <li><code>create_echart</code> <span class="badge bg-warning text-dark tool-badge">write</span>
+                                        <br/><small class="text-muted">AI-generated Apache ECharts dashboards</small>
+                                    </li>
+                                    <li><code>manage_webapp</code> <span class="badge bg-warning text-dark tool-badge">write</span>
+                                        <br/><small class="text-muted">React 19 web applications with routing</small>
+                                    </li>
+                                    <li><code>manage_module</code> <span class="badge bg-warning text-dark tool-badge">write</span>
+                                        <br/><small class="text-muted">Custom Odoo data modules with auto-install</small>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header bg-white">
+                        <strong>OAuth Scopes</strong>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm mb-0">
+                            <tbody>
+                                <tr>
+                                    <td><code>odoo.read</code></td>
+                                    <td class="text-muted">Read access to Odoo data and code</td>
+                                </tr>
+                                <tr>
+                                    <td><code>odoo.write</code></td>
+                                    <td class="text-muted">Write access (CRUD, methods, dashboards, webapps)</td>
+                                </tr>
+                                <tr>
+                                    <td><code>odoo.execute</code></td>
+                                    <td class="text-muted">Execute arbitrary ORM code</td>
+                                </tr>
+                                <tr>
+                                    <td><code>offline_access</code></td>
+                                    <td class="text-muted">Refresh tokens for long-lived sessions</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header bg-white">
+                        <strong>Quick Connect</strong>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-2"><strong>Claude Code CLI:</strong></p>
+                        <pre class="bg-light p-2 rounded mb-3"><code>claude mcp add odoo --transport http <t t-esc="base_url"/>/mcp</code></pre>
+
+                        <p class="mb-2"><strong>Claude Desktop / Claude.ai:</strong></p>
+                        <p class="text-muted small mb-3">Settings → Connectors → Add Custom Connector → Enter URL: <code><t t-esc="base_url"/>/mcp</code></p>
+
+                        <p class="mb-2"><strong>Gemini CLI:</strong></p>
+                        <p class="text-muted small mb-0">Add to <code>~/.gemini/settings.json</code>: <code>{"mcpServers": {"odoo": {"url": "<t t-esc="base_url"/>/mcp"}}}</code></p>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+</odoo>

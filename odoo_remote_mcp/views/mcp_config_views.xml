@@ -1,0 +1,421 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- MCP Config Form View -->
+    <record id="view_mcp_config_form" model="ir.ui.view">
+        <field name="name">mcp.config.form</field>
+        <field name="model">mcp.config</field>
+        <field name="arch" type="xml">
+            <form string="MCP Server Configuration">
+                <sheet>
+                    <!-- Smart Buttons -->
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_mcp_users" type="object"
+                                class="oe_stat_button" icon="fa-user-circle">
+                            <field name="mcp_user_count" widget="statinfo" string="MCP Users"/>
+                        </button>
+                        <button name="action_view_oauth_clients" type="object"
+                                class="oe_stat_button" icon="fa-users">
+                            <field name="oauth_client_count" widget="statinfo" string="OAuth Clients"/>
+                        </button>
+                        <button name="action_view_oauth_tokens" type="object"
+                                class="oe_stat_button" icon="fa-key">
+                            <field name="oauth_token_count" widget="statinfo" string="Active Tokens"/>
+                        </button>
+                        <button name="action_view_execution_logs" type="object"
+                                class="oe_stat_button" icon="fa-history">
+                            <field name="execution_log_count" widget="statinfo" string="Execution Logs"/>
+                        </button>
+                        <button name="action_view_echarts" type="object"
+                                class="oe_stat_button" icon="fa-bar-chart">
+                            <field name="echart_count" widget="statinfo" string="ECharts"/>
+                        </button>
+                        <button name="action_view_webapps" type="object"
+                                class="oe_stat_button" icon="fa-globe">
+                            <field name="webapp_count" widget="statinfo" string="WebApps"/>
+                        </button>
+                    </div>
+
+                    <!-- Title -->
+                    <div class="oe_title">
+                        <label for="server_name"/>
+                        <h1>
+                            <field name="server_name" placeholder="Odoo MCP Server"/>
+                        </h1>
+                    </div>
+
+                    <!-- Main Settings -->
+                    <group>
+                        <group string="Server Status">
+                            <field name="enabled" widget="boolean_toggle"/>
+                            <field name="endpoint_url" readonly="1" invisible="not enabled"/>
+                        </group>
+                        <group string="Quick Actions" invisible="not enabled">
+                            <button name="action_cleanup_expired_tokens" type="object"
+                                    string="Cleanup Expired Tokens" class="btn-secondary"
+                                    icon="fa-trash"/>
+                        </group>
+                    </group>
+
+                    <!-- Notebook with Settings Pages -->
+                    <notebook invisible="not enabled">
+                        <!-- OAuth Settings Tab -->
+                        <page string="OAuth Settings" name="oauth_settings">
+                            <div class="alert alert-info" role="status">
+                                <strong>Token Lifecycle:</strong> To ensure security and OAuth compliance, access tokens are short-lived and automatically regenerated using the refresh token when they expire. This regeneration occurs seamlessly as long as the refresh token is valid. Once the refresh token expires, the user must re-authenticate.
+                            </div>
+                            <group>
+                                <group string="Token Lifetimes">
+                                    <label for="access_token_ttl"/>
+                                    <div class="o_row">
+                                        <field name="access_token_ttl" class="oe_inline"/>
+                                        <span>seconds (default: 3600 = 1 hour)</span>
+                                    </div>
+                                    <label for="refresh_token_ttl"/>
+                                    <div class="o_row">
+                                        <field name="refresh_token_ttl" class="oe_inline"/>
+                                        <span>seconds (default: 2592000 = 30 days)</span>
+                                    </div>
+                                </group>
+                            </group>
+                        </page>
+
+                        <!-- Tool Settings Tab -->
+                        <page string="Tool Settings" name="tool_settings">
+                            <group>
+                                <group string="Logging">
+                                    <field name="enable_execution_logs" widget="boolean_toggle"/>
+                                    <label for="log_retention_days" invisible="not enable_execution_logs"/>
+                                    <div class="o_row" invisible="not enable_execution_logs">
+                                        <field name="log_retention_days" class="oe_inline"/>
+                                        <span>days (0 = keep forever)</span>
+                                    </div>
+                                </group>
+                                <group string="Code Access">
+                                    <label for="code_search_max_matches"/>
+                                    <div class="o_row">
+                                        <field name="code_search_max_matches" class="oe_inline"/>
+                                        <span>max matches for code_search</span>
+                                    </div>
+                                    <label for="code_read_max_lines"/>
+                                    <div class="o_row">
+                                        <field name="code_read_max_lines" class="oe_inline"/>
+                                        <span>max lines for code_read</span>
+                                    </div>
+                                </group>
+                            </group>
+                            <group>
+                                <group string="EChart Settings">
+                                    <field name="echart_expose_data" widget="boolean_toggle"/>
+                                    <div class="text-muted small" colspan="2">
+                                        When disabled, create_echart tool only returns success status and chart URL.
+                                        No actual data is exposed to the AI agent, providing data isolation.
+                                    </div>
+                                </group>
+                                <group string="Module Settings">
+                                    <field name="module_post_zip_to_chatter" widget="boolean_toggle"/>
+                                    <div class="text-muted small" colspan="2">
+                                        When enabled, the module ZIP file is posted to the chatter
+                                        after each install for version history and traceability when using the manage_module tool.
+                                    </div>
+                                </group>
+                            </group>
+                        </page>
+
+                        <!-- User Allowlists Tab -->
+                        <page string="Tool Allowlists" name="user_allowlists">
+                            <!-- Auto-enabled Read Tools Documentation -->
+                            <div class="alert alert-success mb-4" role="status">
+                                <h5 class="fw-bold mb-3">
+                                    <i class="fa fa-check-circle me-2" title="Read Tools"/>Auto-Enabled Read Tools
+                                </h5>
+                                <p class="mb-2">These read-only tools are automatically available to all MCP users (no allowlist required) and respect user permissions:</p>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <strong><i class="fa fa-list me-1" title="list_models"/>list_models</strong>
+                                            <p class="mb-1 small text-muted">Discover Odoo models with regex pattern matching and pagination. Use filters for efficient context usage.</p>
+                                        </div>
+                                        <div class="mb-3">
+                                            <strong><i class="fa fa-sitemap me-1" title="get_model_schema"/>get_model_schema</strong>
+                                            <p class="mb-1 small text-muted">Get field definitions for a model. Supports filtering by field type, stored/computed, required fields.</p>
+                                        </div>
+                                        <div class="mb-3">
+                                            <strong><i class="fa fa-bar-chart me-1" title="read_group"/>read_group</strong>
+                                            <p class="mb-1 small text-muted">Aggregate and group records with SUM, AVG, COUNT, MIN, MAX, etc.</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <strong><i class="fa fa-search me-1" title="search_read"/>search_read</strong>
+                                            <p class="mb-1 small text-muted">Search records with domain filters and return specified fields. Supports pagination and sorting.</p>
+                                        </div>
+                                        <div class="mb-3">
+                                            <strong><i class="fa fa-file-text-o me-1" title="read_record"/>read_record</strong>
+                                            <p class="mb-1 small text-muted">Read a single record by ID with selected fields.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <hr class="my-2"/>
+                                <p class="mb-0 small">
+                                    <i class="fa fa-image me-1" title="Binary"/>
+                                    <strong>Binary/Attachment Support:</strong> Read tools automatically support exposing requested binary/attachment fields as mcp resources. MCP clients may have file size and type restrictions for resource content (~2-3MB).
+                                </p>
+                            </div>
+
+                            <!-- Allowlist Tools Info -->
+                            <div class="alert alert-info mb-4" role="status">
+                                <h5 class="fw-bold mb-2">
+                                    <i class="fa fa-shield me-2" title="Protected"/>Allowlist-Protected Tools
+                                </h5>
+                                <p class="mb-1">The following tools require explicit user allowlisting. If no users are in an allowlist, that tool is completely disabled.</p>
+                                <p class="mb-0"><strong>Note:</strong> Changes to tool list require MCP clients to reconnect before they take effect.</p>
+                            </div>
+
+                            <!-- Safety & Best Practices -->
+                            <div class="alert alert-warning mb-4" role="status">
+                                <h5 class="fw-bold mb-3">
+                                    <i class="fa fa-exclamation-triangle me-2" title="Warning"/>Safety &amp; Best Practices
+                                </h5>
+                                <p class="mb-2"><strong>Write tools are powerful and potentially dangerous.</strong> To ensure system stability and data integrity, please follow these guidelines:</p>
+                                <ul class="mb-0">
+                                    <li><strong>Test First:</strong> Always experiment with new prompts in a development or staging environment before using them in production.</li>
+                                    <li><strong>Be Precise:</strong> Favor precise and unambiguous instructions in your prompts to minimize the risk of AI-driven errors.</li>
+                                    <li><strong>Use Prompt Templates:</strong> For high-risk or production flows, use Prompt Templates with explicit arguments. This ensures consistency and prevents the AI from making incorrect assumptions about field values or record IDs.</li>
+                                </ul>
+                            </div>
+
+                            <!-- code_search + code_read -->
+                            <div class="mb-4">
+                                <h4><i class="fa fa-code text-primary me-2" title="Code"/>code_search / code_read</h4>
+                                <div class="alert alert-success py-2 mb-2" role="status">
+                                    <i class="fa fa-info-circle me-1" title="Info"/>
+                                    <strong>Low Risk:</strong> Can search and read source code from all addons.
+                                    May expose proprietary business logic, algorithms, or integration details. Can utilize ripgrep if available for higher performance.
+                                </div>
+                                <field name="code_access_allowed_users" nolabel="1"
+                                       widget="many2many_tags"
+                                       options="{'no_create': True}"
+                                       placeholder="No users allowed (tools disabled)"/>
+                            </div>
+
+                            <!-- create_record -->
+                            <div class="mb-4">
+                                <h4><i class="fa fa-plus-circle text-success me-2" title="Create"/>create_record</h4>
+                                <div class="alert alert-warning py-2 mb-2" role="status">
+                                    <i class="fa fa-exclamation-triangle me-1" title="Warning"/>
+                                    <strong>Medium Risk:</strong> Can create one or more records in any model the user has access to.
+                                    Supports bulk creation via array of values. AI agents could create unwanted data if not carefully prompted.
+                                </div>
+                                <field name="create_record_allowed_users" nolabel="1"
+                                       widget="many2many_tags"
+                                       options="{'no_create': True}"
+                                       placeholder="No users allowed (tool disabled)"/>
+                            </div>
+
+                            <!-- update_record -->
+                            <div class="mb-4">
+                                <h4><i class="fa fa-pencil text-info me-2" title="Update"/>update_record</h4>
+                                <div class="alert alert-warning py-2 mb-2" role="status">
+                                    <i class="fa fa-exclamation-triangle me-1" title="Warning"/>
+                                    <strong>Medium Risk:</strong> Can modify one or more records in any model the user has access to.
+                                    Supports bulk updates: apply same values to multiple IDs, or different values per record.
+                                    Works seamlessly with search_read for batch operations. AI agents could overwrite important data if not carefully prompted.
+                                </div>
+                                <field name="update_record_allowed_users" nolabel="1"
+                                       widget="many2many_tags"
+                                       options="{'no_create': True}"
+                                       placeholder="No users allowed (tool disabled)"/>
+                            </div>
+
+                            <!-- delete_record -->
+                            <div class="mb-4">
+                                <h4><i class="fa fa-trash text-danger me-2" title="Delete"/>delete_record</h4>
+                                <div class="alert alert-danger py-2 mb-2" role="status">
+                                    <i class="fa fa-exclamation-circle me-1" title="High Risk"/>
+                                    <strong>High Risk:</strong> Can permanently delete one or more records from any model the user has access to.
+                                    Supports bulk deletion via array of IDs.
+                                </div>
+                                <field name="delete_record_allowed_users" nolabel="1"
+                                       widget="many2many_tags"
+                                       options="{'no_create': True}"
+                                       placeholder="No users allowed (tool disabled)"/>
+                            </div>
+
+                            <!-- execute_method -->
+                            <div class="mb-4">
+                                <h4><i class="fa fa-cogs text-danger me-2" title="Execute"/>execute_method</h4>
+                                <div class="alert alert-danger py-2 mb-2" role="status">
+                                    <i class="fa fa-exclamation-circle me-1" title="High Risk"/>
+                                    <strong>High Risk:</strong> Can call methods on any model (e.g., action_confirm, message_post, copy).
+                                    Could trigger workflows, send emails, or perform other business actions.
+                                    <br/><i class="fa fa-info-circle me-1 mt-1" title="Note"/>
+                                    <em>Note: may bypass model restrictions in edge cases depending on method implementations (eg methods using sudo calls for elevated access)</em>
+                                </div>
+                                <field name="execute_method_allowed_users" nolabel="1"
+                                       widget="many2many_tags"
+                                       options="{'no_create': True}"
+                                       placeholder="No users allowed (tool disabled)"/>
+                            </div>
+
+                            <!-- execute_orm -->
+                            <div class="mb-4">
+                                <h4><i class="fa fa-terminal text-danger me-2" title="ORM"/>execute_orm</h4>
+                                <div class="alert alert-danger py-2 mb-2" role="status">
+                                    <i class="fa fa-exclamation-circle me-1" title="High Risk"/>
+                                    <strong>High Risk:</strong> Executes Python code with full ORM access using safe_eval.
+                                    <ul class="mb-0 mt-2">
+                                        <li>Can read, write, or delete data regardless of Model Access restrictions</li>
+                                        <li>Can call methods and potentially bypass user security rules</li>
+                                    </ul>
+                                </div>
+                                <field name="execute_orm_allowed_users" nolabel="1"
+                                       widget="many2many_tags"
+                                       options="{'no_create': True}"
+                                       placeholder="No users allowed (tool disabled)"/>
+                            </div>
+
+                            <!-- create_echart -->
+                            <div class="mb-4">
+                                <h4><i class="fa fa-bar-chart text-danger me-2" title="EChart"/>create_echart</h4>
+                                <div class="alert alert-danger py-2 mb-2" role="status">
+                                    <i class="fa fa-exclamation-circle me-1" title="High Risk"/>
+                                    <strong>High Risk:</strong> Creates persistent ECharts dashboards that execute Python code to fetch data.
+                                    <ul class="mb-0 mt-2">
+                                        <li>Data code uses the same safe_eval environment as execute_orm</li>
+                                        <li>Charts are stored and can be shared with other users</li>
+                                        <li>Same security implications as execute_orm for data fetching</li>
+                                    </ul>
+                                </div>
+                                <field name="create_echart_allowed_users" nolabel="1"
+                                       widget="many2many_tags"
+                                       options="{'no_create': True}"
+                                       placeholder="No users allowed (tool disabled)"/>
+                            </div>
+
+                            <!-- manage_webapp -->
+                            <div class="mb-4">
+                                <h4><i class="fa fa-globe text-danger me-2" title="WebApp"/>manage_webapp + search_webapp_code</h4>
+                                <div class="alert alert-danger py-2 mb-2" role="status">
+                                    <i class="fa fa-exclamation-circle me-1" title="High Risk"/>
+                                    <strong>High Risk:</strong> Creates and manages React web applications that execute Python code.
+                                    Also grants access to <strong>search_webapp_code</strong> for searching within webapp code fields.
+                                    <ul class="mb-0 mt-2">
+                                        <li>Page data code and API handlers use the same safe_eval environment as execute_orm</li>
+                                        <li>WebApps are stored and can be shared with other users or made public</li>
+                                        <li>Same security implications as execute_orm for data fetching</li>
+                                    </ul>
+                                </div>
+                                <field name="manage_webapp_allowed_users" nolabel="1"
+                                       widget="many2many_tags"
+                                       options="{'no_create': True}"
+                                       placeholder="No users allowed (tool disabled)"/>
+                            </div>
+
+                            <!-- manage_module -->
+                            <div class="mb-4">
+                                <h4><i class="fa fa-cube text-danger me-2" title="Module"/>manage_module + search_module_code</h4>
+                                <div class="alert alert-danger py-2 mb-2" role="status">
+                                    <i class="fa fa-exclamation-circle me-1" title="High Risk"/>
+                                    <strong>High Risk:</strong> Creates
+                                    <a href="https://www.odoo.com/documentation/17.0/developer/tutorials/importable_modules.html"
+                                       target="_blank">importable modules</a>
+                                    — data-only packages (no Python code) automatically bundled as installable ZIP files.
+                                    Also grants access to <strong>search_module_code</strong> for searching within module file contents.
+                                    <ul class="mb-0 mt-2">
+                                        <li>Can create new models, fields, views, menus, security rules, and server actions</li>
+                                        <li>Modules are automatically packaged as ZIP files and installed — no manual upload needed</li>
+                                        <li>Installed modules persist across restarts and affect the database schema</li>
+                                        <li>Computed fields and server actions use safe_eval (same risk as execute_orm)</li>
+                                    </ul>
+                                </div>
+                                <field name="manage_module_allowed_users" nolabel="1"
+                                       widget="many2many_tags"
+                                       options="{'no_create': True}"
+                                       placeholder="No users allowed (tool disabled)"/>
+                            </div>
+                        </page>
+
+                        <!-- Model Access Tab -->
+                        <page string="Model Access" name="model_access">
+                            <div class="alert alert-info mb-4" role="status">
+                                <h5 class="fw-bold mb-2">
+                                    <i class="fa fa-database me-2" title="Models"/>Model Access Restrictions
+                                </h5>
+                                <p class="mb-2">Restrict which models/fields users can access via MCP. These are additional restrictions on top of standard Odoo permissions.</p>
+                                <ul class="mb-0">
+                                    <li><strong>No groups defined:</strong> All models accessible (no restrictions)</li>
+                                    <li><strong>Group with applicable users:</strong> Those users can only access that group's models</li>
+                                    <li><strong>Group without applicable users:</strong> Applies to all users, that are not in another group</li>
+                                </ul>
+                            </div>
+
+                            <div class="alert alert-warning mb-4" role="status">
+                                <i class="fa fa-exclamation-triangle me-1" title="Warning"/>
+                                <strong>Note:</strong> The <code>execute_orm</code> tool bypasses these restrictions.
+                                Ensure only trusted users have access to execute_orm.
+                            </div>
+
+                            <field name="model_access_ids" nolabel="1">
+                                <tree editable="bottom">
+                                    <field name="name" placeholder="default access grouping..."/>
+                                    <field name="user_ids" widget="many2many_tags"
+                                           options="{'no_create': True}"
+                                           optional="show"/>
+                                    <field name="model_group_id"/>
+                                    <field name="is_default" readonly="1" optional="hide"/>
+                                </tree>
+                            </field>
+                        </page>
+
+                        <!-- Connection Info Tab -->
+                        <page string="Connection Info" name="connection_info">
+                            <div class="alert alert-info" role="status">
+                                <h4>Connect Claude to this Odoo instance:</h4>
+                                <ol>
+                                    <li>In Claude Desktop or claude.ai, go to <strong>Settings</strong> &gt; <strong>Connectors</strong></li>
+                                    <li>Click <strong>Add custom connector</strong></li>
+                                    <li>Enter your Odoo MCP URL: <code><field name="endpoint_url" readonly="1" class="oe_inline"/></code></li>
+                                    <li>Complete the OAuth authentication when prompted</li>
+                                </ol>
+                                <p class="mt-3">
+                                    <a href="/mcp/docs" target="_blank" class="btn btn-secondary" role="button">
+                                        <i class="fa fa-external-link" title="External Link"/> View MCP Documentation
+                                    </a>
+                                </p>
+                                <div class="mt-3 pt-3 border-top">
+                                    <h5>Revoking Access</h5>
+                                    <p class="mb-1">MCP tokens work like API keys - they remain valid until they expire or are deleted.</p>
+                                    <ul class="mb-0">
+                                        <li>To revoke a user's access/enforce re-authentication: delete their token from <strong>Access Tokens</strong> menu</li>
+                                        <li>Deactivating a user or revoking there MCP permission group also blocks their MCP access</li>
+                                        <li>Users can manage their own tokens from <strong>Preferences > Security</strong></li>
+                                        <li>Access tokens may be re-generated automatically on expiry through associated refresh token, once the refresh token expires, re-authentication will be mandated.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Server Action to open the singleton record -->
+    <record id="action_mcp_config_open_singleton" model="ir.actions.server">
+        <field name="name">MCP Settings</field>
+        <field name="model_id" ref="model_mcp_config"/>
+        <field name="state">code</field>
+        <field name="code">
+config = env['mcp.config'].get_config()
+action = {
+    'type': 'ir.actions.act_window',
+    'res_model': 'mcp.config',
+    'view_mode': 'form',
+    'res_id': config.id,
+    'target': 'current',
+    'context': {'form_view_initial_mode': 'edit'},
+}
+        </field>
+    </record>
+</odoo>

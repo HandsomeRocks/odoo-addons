@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- MCP Root Menu (standalone app) -->
+    <menuitem
+        id="menu_mcp_root"
+        name="MCP Server"
+        web_icon="odoo_remote_mcp,static/description/icon.png"
+        sequence="100"
+        groups="odoo_remote_mcp.group_mcp_user"/>
+
+    <!-- Configuration Menu (default view) -->
+    <menuitem
+        id="menu_mcp_config"
+        name="Configuration"
+        parent="menu_mcp_root"
+        action="action_mcp_config_open_singleton"
+        sequence="1"/>
+
+    <!-- Prompts Menu -->
+    <menuitem
+        id="menu_mcp_prompts"
+        name="Prompts"
+        parent="menu_mcp_root"
+        action="action_mcp_prompt"
+        sequence="5"/>
+
+    <!-- OAuth Clients Menu -->
+    <menuitem
+        id="menu_mcp_oauth_clients"
+        name="OAuth Clients"
+        parent="menu_mcp_root"
+        action="action_mcp_oauth_client"
+        sequence="10"/>
+
+    <!-- API Keys Menu -->
+    <menuitem
+        id="menu_mcp_api_keys"
+        name="API Keys"
+        parent="menu_mcp_root"
+        action="action_mcp_api_key"
+        groups="odoo_remote_mcp.group_mcp_admin"
+        sequence="15"/>
+
+    <!-- Access Tokens Menu -->
+    <menuitem
+        id="menu_mcp_oauth_tokens"
+        name="Access Tokens"
+        parent="menu_mcp_root"
+        action="action_mcp_oauth_token"
+        sequence="20"/>
+
+    <!-- Execution Logs Menu -->
+    <menuitem
+        id="menu_mcp_execution_logs"
+        name="Execution Logs"
+        parent="menu_mcp_root"
+        action="action_mcp_execution_log"
+        sequence="30"/>
+</odoo>

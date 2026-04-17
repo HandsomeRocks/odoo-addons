@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- API Key List View -->
+    <record id="mcp_api_key_view_list" model="ir.ui.view">
+        <field name="name">mcp.api.key.list</field>
+        <field name="model">mcp.api.key</field>
+        <field name="arch" type="xml">
+            <tree string="API Keys" decoration-muted="not active">
+                <field name="name"/>
+                <field name="user_id"/>
+                <field name="scope"/>
+                <field name="active"/>
+                <field name="create_date"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- API Key Form View -->
+    <record id="mcp_api_key_view_form" model="ir.ui.view">
+        <field name="name">mcp.api.key.form</field>
+        <field name="model">mcp.api.key</field>
+        <field name="arch" type="xml">
+            <form string="API Key">
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <group string="Key Settings">
+                        <field name="name" placeholder="e.g. helpdesk-bot"/>
+                        <field name="user_id"/>
+                        <label for="api_key"/>
+                        <div class="d-flex gap-2 align-items-start">
+                            <field name="api_key" class="flex-grow-1"/>
+                            <button name="action_generate_key" type="object"
+                                    string="Generate" class="btn-secondary"/>
+                        </div>
+                        <field name="scope"/>
+                        <field name="active"/>
+                    </group>
+                    <separator string="Description"/>
+                    <field name="description" placeholder="What is this key used for?"/>
+                    <separator string="Usage Guide"/>
+                    <div>
+                        <p><strong>Quick start — Claude Chat Bot:</strong></p>
+                        <p>Want a ready-made AI chat assistant? Import the
+                        <a href="https://github.com/Codemarchant/odoo_mcp_app_library/tree/main/claude_chat_bot" target="_blank">Claude Chat Bot</a>
+                        web application, then create two API keys here:</p>
+                        <ul>
+                            <li><strong>anthropic-api</strong> — Your Anthropic API key (from console.anthropic.com)</li>
+                            <li><strong>claude-bot</strong> (optional) — An MCP bearer token so Claude can call back into your Odoo instance. Use the <strong>Generate</strong> button above to create one.</li>
+                        </ul>
+                        <separator/>
+                        <p><strong>Using API keys in your own endpoint handlers:</strong></p>
+                        <p>Store any third-party API key here, then look it up by name in handler code:</p>
+                        <pre style="background: #f8f9fa; padding: 12px; border-radius: 4px; font-size: 13px;">api_key = env['mcp.api.key'].sudo().search(
+    [('name', '=', 'my-service')], limit=1
+).api_key</pre>
+                        <p><strong>MCP connector usage:</strong></p>
+                        <p>To let an external AI call back into your Odoo MCP server, pass the key
+                        as <code>authorization_token</code>:</p>
+                        <pre style="background: #f8f9fa; padding: 12px; border-radius: 4px; font-size: 13px;">"mcpServers": [{
+    "type": "url",
+    "url": "https://your-odoo.com/mcp",
+    "authorization_token": api_key
+}]</pre>
+                        <p>Requests authenticate as the <strong>User</strong> configured on the key,
+                        with the <strong>Scope</strong> defined above.</p>
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- API Key Action -->
+    <record id="action_mcp_api_key" model="ir.actions.act_window">
+        <field name="name">API Keys</field>
+        <field name="res_model">mcp.api.key</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_active': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No API keys yet
+            </p>
+            <p>
+                API keys provide simple bearer token authentication for the MCP endpoint.
+                Use them in webapp endpoint handlers to call the Claude API with MCP connector.
+            </p>
+        </field>
+    </record>
+</odoo>

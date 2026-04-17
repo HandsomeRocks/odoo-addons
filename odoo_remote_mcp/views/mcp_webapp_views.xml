@@ -1,0 +1,601 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- MCP WebApp Form View -->
+    <record id="view_mcp_webapp_form" model="ir.ui.view">
+        <field name="name">mcp.webapp.form</field>
+        <field name="model">mcp.webapp</field>
+        <field name="arch" type="xml">
+            <form string="Web Application">
+                <header>
+                    <button name="action_view_app" type="object"
+                            string="Open App" class="btn-primary"
+                            icon="fa-external-link"/>
+                    <button name="action_export" type="object"
+                            string="Export" class="btn-secondary"
+                            icon="fa-download"
+                            title="Export webapp as CSV (without assets) to chatter for deployment or backup"/>
+                    <button name="action_export_with_assets" type="object"
+                            string="Export with Assets" class="btn-secondary"
+                            icon="fa-download"
+                            title="Export webapp as CSV including asset binary data — may fail on servers with low worker memory"/>
+                </header>
+                <sheet>
+                    <field name="thumbnail" widget="image" class="oe_avatar"/>
+
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name" placeholder="My App"/>
+                        </h1>
+                        <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}"
+                               placeholder="Add tags..."/>
+                    </div>
+
+                    <group>
+                        <group string="Configuration">
+                            <field name="slug" placeholder="my-app-name"/>
+                            <field name="router_mode"/>
+                            <field name="tailwind_enabled"/>
+                            <field name="pwa_enabled"/>
+                            <field name="pwa_display" invisible="not pwa_enabled"/>
+                            <field name="pwa_theme_color" widget="color" invisible="not pwa_enabled"/>
+                            <field name="pwa_background_color" widget="color" invisible="not pwa_enabled"/>
+                            <field name="app_url" widget="CopyClipboardChar" readonly="1"/>
+                        </group>
+                        <group string="Metadata">
+                            <field name="user_id" readonly="1"/>
+                            <field name="client_id" readonly="1"/>
+                            <field name="track_viewcount"/>
+                            <field name="view_count" readonly="1"/>
+                            <field name="create_date" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <field name="description" placeholder="Description of this application..."/>
+
+                    <notebook>
+                        <!-- Pages Tab -->
+                        <page string="Pages" name="pages">
+                            <field name="page_ids" nolabel="1">
+                                <tree>
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="name"/>
+                                    <field name="route_path"/>
+                                    <field name="page_title" optional="show"/>
+                                </tree>
+                            </field>
+
+                            <div class="alert alert-info mt-3" role="status">
+                                <strong>Page Component Props:</strong>
+                                <code>data</code> (page data), <code>routeParams</code> (URL params),
+                                <code>globalState/setGlobalState</code> (app state),
+                                <code>initialData</code> (app initial data), <code>api</code> (fetch helper),
+                                <code>storage</code> (persistent user data), <code>user</code> (current user info)
+                            </div>
+                        </page>
+
+                        <!-- API Endpoints Tab -->
+                        <page string="API Endpoints" name="endpoints">
+                            <field name="endpoint_ids" nolabel="1">
+                                <tree>
+                                    <field name="name"/>
+                                    <field name="endpoint_path"/>
+                                    <field name="method"/>
+                                </tree>
+                            </field>
+
+                            <div class="alert alert-info mt-3" role="status">
+                                <strong>Handler Variables:</strong>
+                                <code>query_params</code> (URL query), <code>body</code> (POST/PUT data),
+                                <code>route_params</code> (path params like :id)
+                            </div>
+                        </page>
+
+                        <!-- App Data & State Tab (consolidated) -->
+                        <page string="App Data &amp; State" name="app_data">
+                            <div class="mb-3">
+                                <span class="o_form_label fw-bold d-block mb-1">Initial Data (Python)</span>
+                                <field name="data_code" widget="code" options="{'mode': 'python'}"
+                                       placeholder="# Fetch initial app data (available via initialData prop)
+# Available: env, user, uid, ref, datetime, timedelta, etc.
+# Assign to 'result' variable
+
+result = {
+    'company': env.company.name,
+    'user': env.user.name
+}"/>
+                            </div>
+
+                            <div class="mb-3">
+                                <span class="o_form_label fw-bold d-block mb-1">Global State (JavaScript)</span>
+                                <field name="global_state_code" widget="code" options="{'mode': 'js'}"
+                                       placeholder="// Initial React global state (JavaScript object)
+// Access via globalState/setGlobalState props
+{
+    theme: 'light',
+    sidebarOpen: true
+}"/>
+                            </div>
+
+                            <div class="mb-3">
+                                <span class="o_form_label fw-bold d-block mb-1">Shared Components (JSX)</span>
+                                <field name="shared_components" widget="code" options="{'mode': 'js'}"
+                                       placeholder="// Reusable components available to all pages
+function Card({children, className = ''}) {
+    return (
+        &lt;div className={`bg-white rounded-lg shadow p-4 ${className}`}&gt;
+            {children}
+        &lt;/div&gt;
+    );
+}"/>
+                            </div>
+                        </page>
+
+                        <!-- Styles Tab -->
+                        <page string="Styles" name="styles">
+                            <span class="o_form_label fw-bold d-block mb-1">Global CSS Styles</span>
+                            <field name="shared_styles" widget="code" options="{'mode': 'scss'}"
+                                   placeholder="/* Global CSS styles */
+.app-header {
+    background: linear-gradient(135deg, #714B67 0%, #8B5E83 100%);
+    color: white;
+    padding: 1rem;
+}
+
+.app-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem;
+}"/>
+                        </page>
+
+                        <!-- Dependencies Tab -->
+                        <page string="Dependencies" name="dependencies">
+                            <div class="mb-3">
+                                <span class="o_form_label fw-bold d-block mb-1">CDN Dependencies (Import Map)</span>
+                                <field name="cdn_dependencies" widget="code" options="{'mode': 'js'}"
+                                       placeholder='// JSON import map - use ?external=react,react-dom for React libraries:
+{
+    "recharts": "https://esm.sh/recharts@2?external=react,react-dom",
+    "lucide-react": "https://esm.sh/lucide-react?external=react,react-dom"
+}'/>
+                            </div>
+
+                            <div class="mb-3">
+                                <span class="o_form_label fw-bold d-block mb-1">Custom Imports</span>
+                                <field name="custom_imports" widget="code" options="{'mode': 'js'}"
+                                       placeholder="// Import from libraries added above:
+import { LineChart, BarChart, XAxis, YAxis, Tooltip } from 'recharts';
+import { Search, Menu, X } from 'lucide-react';"/>
+                            </div>
+                        </page>
+
+                        <!-- Assets Tab -->
+                        <page string="Assets" name="assets">
+                            <field name="asset_ids" nolabel="1"
+                                   context="{'default_res_model': 'mcp.webapp', 'default_res_field': 'asset_ids', 'bin_size': True}">
+                                <tree>
+                                    <field name="name"/>
+                                    <field name="mimetype"/>
+                                    <field name="datas" string="Size"/>
+                                </tree>
+                            </field>
+
+                            <div class="alert alert-info mt-3" role="status">
+                                <strong>Asset Helper:</strong>
+                                Use <code>asset('filename.png')</code> in component code to get the asset URL.
+                                <br/>
+                                <small class="text-muted">
+                                    Example: <code>&lt;img src={'{'}asset('player.png'){'}'} /&gt;</code>
+                                    Also available via <code>useApp().asset</code> hook.
+                                </small>
+                            </div>
+                        </page>
+
+                        <!-- User Storage Tab -->
+                        <page string="User Storage" name="storage"
+                              groups="odoo_remote_mcp.group_mcp_admin">
+                            <field name="storage_ids" nolabel="1">
+                                <tree delete="1">
+                                    <field name="user_id" optional="show"/>
+                                    <field name="session_id" optional="show"/>
+                                    <field name="data" optional="hide"/>
+                                    <field name="last_accessed"/>
+                                    <field name="write_date"/>
+                                </tree>
+                                <form>
+                                    <group>
+                                        <field name="user_id"/>
+                                        <field name="session_id"/>
+                                        <field name="last_accessed"/>
+                                        <field name="write_date"/>
+                                    </group>
+                                    <group string="Storage Data">
+                                        <field name="data_text" widget="code" options="{'mode': 'js'}"/>
+                                    </group>
+                                </form>
+                            </field>
+                            <div class="alert alert-info mt-3" role="status">
+                                <strong>Storage API:</strong>
+                                <code>storage.get(key, default)</code>, <code>storage.set(key, value)</code>,
+                                <code>storage.delete(key)</code>, <code>storage.getAll()</code>,
+                                <code>storage.clear()</code>
+                                <br/>
+                                <small class="text-muted">
+                                    Logged-in users: server storage keyed by user_id (persists across sessions/devices).
+                                    Anonymous users: server storage keyed by session_id (persists within browser session).
+                                    Maximum 5MB per user/session per app.
+                                </small>
+                            </div>
+                        </page>
+
+                        <!-- Sharing Tab -->
+                        <page string="Sharing" name="sharing">
+                            <group>
+                                <field name="shared_user_ids" widget="many2many_tags"
+                                       options="{'no_create': True}"/>
+                                <field name="shared_group_ids" widget="many2many_tags"
+                                       options="{'no_create': True}"/>
+                            </group>
+
+                            <!-- Embed Code Section -->
+                            <group string="Embed on Website" invisible="not id">
+                                <field name="embed_code" widget="CopyClipboardChar" readonly="1"/>
+                                <div colspan="2" class="text-muted small">
+                                    <i class="fa fa-info-circle me-1" title="Info"/>
+                                    Copy the iframe snippet to embed this app on any website.
+                                    The app must be shared with the appropriate group (e.g. Public)
+                                    for external visitors to access it.
+                                </div>
+                            </group>
+
+                            <div class="alert alert-info mt-3" role="status">
+                                <strong>Access Control via Groups:</strong>
+                                <ul class="mb-0 mt-2">
+                                    <li><strong>Public Website Access (no login):</strong> Add <code>Public</code> group to "Shared With Groups"</li>
+                                    <li><strong>Portal Users:</strong> Add <code>Role/Portal</code> group to "Shared With Groups"</li>
+                                    <li><strong>Internal Users:</strong> Add <code>Role/User</code> or specific groups</li>
+                                    <li><strong>Specific Users:</strong> Add users directly to "Shared With Users"</li>
+                                </ul>
+                            </div>
+                        </page>
+
+                        <page string="Documentation" name="documentation">
+                            <div class="alert alert-info" role="status">
+                                <h5 class="fw-bold mb-3">
+                                    <i class="fa fa-exchange me-2" title="Deployment"/>Staging &#x2192; Production Workflow
+                                </h5>
+                                <p>
+                                    The recommended workflow is to develop and test on a <strong>staging</strong> database,
+                                    then deploy to <strong>production</strong> using the Export button.
+                                </p>
+                                <h6 class="fw-bold mt-3 mb-2">
+                                    <i class="fa fa-arrow-right me-1" title="First Deploy"/>First deployment
+                                </h6>
+                                <ol class="mb-2">
+                                    <li>On staging: create and test the WebApp (pages, endpoints, styles)</li>
+                                    <li>Click <strong>Export</strong> &#x2192; a CSV with external IDs is posted to the chatter</li>
+                                    <li>On production: go to <strong>MCP &#x2192; WebApps</strong>, use the Odoo <strong>Import records</strong> (list view &#x2192; gear icon) to import the CSV</li>
+                                </ol>
+                                <h6 class="fw-bold mt-3 mb-2">
+                                    <i class="fa fa-refresh me-1" title="Subsequent Updates"/>Subsequent updates
+                                </h6>
+                                <ol class="mb-2">
+                                    <li>On staging: make changes and re-test</li>
+                                    <li>Click <strong>Export</strong> to generate a fresh CSV</li>
+                                    <li>On production: import the CSV &#x2014; Odoo matches on external IDs and <strong>updates existing records</strong> (webapp, pages, endpoints)</li>
+                                </ol>
+                                <div class="mt-2 text-muted small">
+                                    <i class="fa fa-info-circle me-1" title="Info"/>
+                                    Exports include app structure only (pages, endpoints, settings) &#x2014;
+                                    User Storage data is excluded, so production user data is never
+                                    overwritten on reimport.
+                                </div>
+                            </div>
+                            <div class="alert alert-warning" role="status">
+                                <h5 class="fw-bold mb-3">
+                                    <i class="fa fa-exclamation-triangle me-2" title="Warning"/>Orphan pages, endpoints and component files
+                                </h5>
+                                <p>
+                                    If you <strong>remove a page, endpoint or component file</strong> on staging and then reimport to
+                                    production, the removed items will <strong>not be automatically deleted</strong> on
+                                    production. The import only creates or updates &#x2014; it never deletes.
+                                </p>
+                                <p class="mb-0">
+                                    After reimporting, manually delete any orphan pages, endpoints or component files on
+                                    production that are no longer present in the staging version.
+                                </p>
+                            </div>
+                            <div class="alert alert-danger" role="status">
+                                <h5 class="fw-bold mb-3">
+                                    <i class="fa fa-ban me-2" title="Warning"/>Do not delete the WebApp record
+                                </h5>
+                                <p class="mb-0">
+                                    Unlike MCP Modules, <strong>do not delete the WebApp record</strong> before
+                                    reimporting. Deleting the record will permanently destroy all
+                                    <strong>User Storage</strong> data (game saves, user preferences, form drafts, etc.)
+                                    linked to this webapp. Always reimport over the existing record instead.
+                                </p>
+                            </div>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- MCP WebApp Page Form View (for inline editing) -->
+    <record id="view_mcp_webapp_page_form" model="ir.ui.view">
+        <field name="name">mcp.webapp.page.form</field>
+        <field name="model">mcp.webapp.page</field>
+        <field name="arch" type="xml">
+            <form string="Page">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="route_path"/>
+                            <field name="page_title"/>
+                        </group>
+                        <group>
+                            <field name="sequence"/>
+                            <field name="webapp_id" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Component Code" name="component">
+                            <field name="component_code" widget="code" options="{'mode': 'js'}"
+                                   placeholder="// React functional component
+// Props: data, routeParams, globalState, setGlobalState, initialData, api, storage, user
+function HomePage({data, routeParams, globalState, setGlobalState, initialData, api, storage, user}) {
+    const [highScore, setHighScore] = useState(0);
+    useEffect(() => { storage.get('highScore', 0).then(setHighScore); }, []);
+    return (
+        &lt;div className='p-4'&gt;
+            &lt;h1 className='text-2xl font-bold mb-4'&gt;Welcome, {user.name}!&lt;/h1&gt;
+            &lt;p&gt;High Score: {highScore}&lt;/p&gt;
+            {user.is_system &amp;&amp; &lt;p&gt;Admin panel visible&lt;/p&gt;}
+        &lt;/div&gt;
+    );
+}"/>
+                        </page>
+                        <page string="Data Code" name="data">
+                            <field name="data_code" widget="code" options="{'mode': 'python'}"
+                                   placeholder="# Fetch page-specific data
+# Available: route_params dict (e.g., {'id': '123'})
+# Assign to 'result' variable
+
+record_id = int(route_params.get('id', 0))
+if record_id:
+    result = env['sale.order'].browse(record_id).read(['name', 'amount_total', 'state'])[0]
+else:
+    result = {}"/>
+                        </page>
+                        <page string="Component Files" name="component_files">
+                            <div class="alert alert-info" role="status">
+                                Split large components into named files. Files are injected before the main component code in sequence order.
+                                All files share the same scope — later files and the main component can reference earlier files.
+                            </div>
+                            <field name="component_file_ids" nolabel="1">
+                                <tree>
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="name"/>
+                                </tree>
+                                <form>
+                                    <group>
+                                        <field name="name"/>
+                                        <field name="sequence"/>
+                                    </group>
+                                    <field name="code" widget="code" options="{'mode': 'js'}"
+                                           placeholder="// Code injected before the main component
+// Define classes, constants, utility functions, etc.
+// Everything here is available to the main component_code"/>
+                                </form>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- MCP WebApp Endpoint Form View (for inline editing) -->
+    <record id="view_mcp_webapp_endpoint_form" model="ir.ui.view">
+        <field name="name">mcp.webapp.endpoint.form</field>
+        <field name="model">mcp.webapp.endpoint</field>
+        <field name="arch" type="xml">
+            <form string="API Endpoint">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="endpoint_path"/>
+                            <field name="method"/>
+                        </group>
+                        <group>
+                            <field name="webapp_id" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <field name="handler_code" widget="code" options="{'mode': 'python'}"
+                           placeholder="# Handle API request
+# Available: query_params, body (POST/PUT), route_params
+# Assign to 'result' variable
+
+order_id = int(route_params.get('id', 0))
+if body.get('action') == 'confirm':
+    order = env['sale.order'].browse(order_id)
+    order.action_confirm()
+    result = {'success': True, 'state': order.state}
+else:
+    result = {'error': 'Unknown action'}"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- MCP WebApp List View -->
+    <record id="view_mcp_webapp_list" model="ir.ui.view">
+        <field name="name">mcp.webapp.list</field>
+        <field name="model">mcp.webapp</field>
+        <field name="arch" type="xml">
+            <tree string="Web Applications">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="slug" optional="show"/>
+                <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}" optional="show"/>
+                <field name="view_count" optional="show"/>
+                <field name="user_id"/>
+                <field name="create_date"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- MCP WebApp Kanban View -->
+    <record id="view_mcp_webapp_kanban" model="ir.ui.view">
+        <field name="name">mcp.webapp.kanban</field>
+        <field name="model">mcp.webapp</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile">
+                <field name="name"/>
+                <field name="description"/>
+                <field name="user_id"/>
+                <field name="app_url"/>
+                <field name="tag_ids"/>
+                <field name="view_count"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_card oe_kanban_global_click">
+                            <div class="o_kanban_image">
+                                <field name="thumbnail" widget="image" options="{'size': [64, 64]}"/>
+                            </div>
+                            <div class="oe_kanban_details">
+                                <div class="o_kanban_record_title">
+                                    <strong><field name="name"/></strong>
+                                </div>
+                                <div class="text-muted small mb-1">
+                                    <field name="description"/>
+                                </div>
+                                <div class="mb-2">
+                                    <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}"/>
+                                </div>
+                                <div class="o_kanban_record_bottom">
+                                    <div class="oe_kanban_bottom_left">
+                                        <field name="user_id" widget="many2one_avatar_user"/>
+                                        <span class="ms-2 text-muted small">
+                                            <i class="fa fa-eye" title="View count"/> <field name="view_count"/>
+                                        </span>
+                                    </div>
+                                    <div class="oe_kanban_bottom_right">
+                                        <a t-att-href="record.app_url.value" target="_blank"
+                                           class="btn btn-sm btn-primary" role="button">
+                                            <i class="fa fa-external-link" title="Open"/> Open
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- MCP WebApp Search View -->
+    <record id="view_mcp_webapp_search" model="ir.ui.view">
+        <field name="name">mcp.webapp.search</field>
+        <field name="model">mcp.webapp</field>
+        <field name="arch" type="xml">
+            <search string="Web Applications">
+                <field name="name"/>
+                <field name="slug"/>
+                <field name="description"/>
+                <field name="tag_ids"/>
+                <field name="user_id"/>
+                <filter string="My Apps" name="my_apps"
+                        domain="[('user_id', '=', uid)]"/>
+                <filter string="Shared with Me" name="shared"
+                        domain="[('user_id', '!=', uid), ('shared_user_ids', 'in', uid)]"/>
+                <separator/>
+                <filter string="Games" name="games"
+                        domain="[('tag_ids.name', 'ilike', 'game')]"/>
+                <filter string="Public Apps" name="public_apps"
+                        domain="[('tag_ids.name', 'ilike', 'public')]"/>
+                <separator/>
+                <filter string="Creator" name="group_user"
+                        context="{'group_by': 'user_id'}"/>
+                <filter string="Tags" name="group_tags"
+                        context="{'group_by': 'tag_ids'}"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- MCP WebApp Action -->
+    <record id="action_mcp_webapp" model="ir.actions.act_window">
+        <field name="name">Web Applications</field>
+        <field name="res_model">mcp.webapp</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="search_view_id" ref="view_mcp_webapp_search"/>
+        <field name="context">{'search_default_my_apps': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first React web application
+            </p>
+            <p>
+                Build interactive web applications with React, multi-page routing,
+                and dynamic data fetching from Odoo.
+            </p>
+        </field>
+    </record>
+
+    <!-- Action: WebApps (under MCP Server, for technical users) -->
+    <menuitem id="menu_mcp_webapp"
+              name="WebApps"
+              parent="menu_mcp_root"
+              action="action_mcp_webapp"
+              sequence="7"
+              groups="odoo_remote_mcp.group_mcp_user"/>
+
+    <!-- Action: WebApp Viewer (kanban, for browsing apps - internal users) -->
+    <record id="action_mcp_webapp_browse" model="ir.actions.act_window">
+        <field name="name">Browse Applications</field>
+        <field name="res_model">mcp.webapp</field>
+        <field name="view_mode">kanban,tree</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'kanban', 'view_id': ref('view_mcp_webapp_kanban')}),
+            (0, 0, {'view_mode': 'tree', 'view_id': ref('view_mcp_webapp_list')})]"/>
+        <field name="search_view_id" ref="view_mcp_webapp_search"/>
+        <field name="context">{'create': False}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No web applications available
+            </p>
+            <p>
+                Web applications shared with you will appear here.
+                Click "Open" to launch an application.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu: WebApp App (separate top-level app for all internal users) -->
+    <menuitem
+        id="menu_webapp_app_root"
+        name="Web Applications"
+        web_icon="odoo_remote_mcp,static/description/webapp_icon.png"
+        sequence="98"
+        groups="base.group_user"/>
+
+    <menuitem
+        id="menu_webapp_browse"
+        name="Browse Applications"
+        parent="menu_webapp_app_root"
+        action="action_mcp_webapp_browse"
+        sequence="1"/>
+
+</odoo>

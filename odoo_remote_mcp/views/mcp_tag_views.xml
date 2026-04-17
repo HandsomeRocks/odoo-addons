@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- MCP Tag Form View -->
+    <record id="view_mcp_tag_form" model="ir.ui.view">
+        <field name="name">mcp.tag.form</field>
+        <field name="model">mcp.tag</field>
+        <field name="arch" type="xml">
+            <form string="Tag">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="color" widget="color_picker"/>
+                        </group>
+                        <group>
+                            <field name="sequence"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- MCP Tag List View -->
+    <record id="view_mcp_tag_list" model="ir.ui.view">
+        <field name="name">mcp.tag.list</field>
+        <field name="model">mcp.tag</field>
+        <field name="arch" type="xml">
+            <tree string="Tags" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="color" widget="color_picker"/>
+                <field name="active" column_invisible="1"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- MCP Tag Search View -->
+    <record id="view_mcp_tag_search" model="ir.ui.view">
+        <field name="name">mcp.tag.search</field>
+        <field name="model">mcp.tag</field>
+        <field name="arch" type="xml">
+            <search string="Tags">
+                <field name="name"/>
+                <filter string="Archived" name="archived"
+                        domain="[('active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- MCP Tag Action -->
+    <record id="action_mcp_tag" model="ir.actions.act_window">
+        <field name="name">Tags</field>
+        <field name="res_model">mcp.tag</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_mcp_tag_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first tag
+            </p>
+            <p>
+                Tags help categorize webapps and echarts for easy filtering.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu: Tags (under MCP Server) -->
+    <menuitem
+        id="menu_mcp_tags"
+        name="Tags"
+        parent="menu_mcp_root"
+        action="action_mcp_tag"
+        sequence="8"
+        groups="odoo_remote_mcp.group_mcp_user"/>
+</odoo>

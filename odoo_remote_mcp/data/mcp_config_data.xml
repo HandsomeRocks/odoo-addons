@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Default MCP Configuration Singleton -->
+        <record id="default_mcp_config" model="mcp.config">
+            <field name="enabled">True</field>
+            <field name="server_name">Odoo MCP Server</field>
+            <field name="access_token_ttl">3600</field>
+            <field name="refresh_token_ttl">2592000</field>
+            <field name="log_retention_days">30</field>
+            <field name="code_search_max_matches">500</field>
+            <field name="code_read_max_lines">500</field>
+        </record>
+    </data>
+</odoo>
