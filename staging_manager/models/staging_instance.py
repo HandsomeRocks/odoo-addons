@@ -285,7 +285,7 @@ class StagingInstance(models.Model):
             raise UserError("Instance has no slug — sync first.")
         try:
             result = self._api_post(f"/api/instances/{self.slug}/{endpoint_suffix}")
-            if isinstance(result, dict) and "error" not in result:
+            if isinstance(result, dict) and "id" in result:
                 self._upsert_from_api(result)
             return {
                 "type": "ir.actions.client",
