@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Top-level app menu -->
+    <menuitem id="menu_staging_manager_root"
+              name="Staging Manager"
+              sequence="90"/>
+
+    <!-- Instances sub-menu -->
+    <menuitem id="menu_staging_instances"
+              name="Instances"
+              parent="menu_staging_manager_root"
+              action="action_staging_instance"
+              sequence="10"/>
+
+    <!-- Configuration menu group -->
+    <menuitem id="menu_staging_config"
+              name="Configuration"
+              parent="menu_staging_manager_root"
+              sequence="90"
+              groups="base.group_system"/>
+
+    <menuitem id="menu_staging_settings"
+              name="Settings"
+              parent="menu_staging_config"
+              action="base.action_general_configuration"
+              sequence="10"
+              groups="base.group_system"/>
+
+</odoo>

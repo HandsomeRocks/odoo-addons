@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_res_config_settings_staging" model="ir.ui.view">
+        <field name="name">res.config.settings.staging</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="priority">90</field>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="Staging Manager" string="Staging Manager"
+                     groups="base.group_system">
+                    <block title="Connection" name="staging_connection">
+                        <setting string="Manager URL"
+                                 help="Full URL of the Staging Manager web app">
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="staging_manager_url" class="col-lg-3"/>
+                                    <field name="staging_manager_url"
+                                           placeholder="https://staging.example.com"/>
+                                </div>
+                            </div>
+                        </setting>
+                        <setting string="Authentication Method"
+                                 help="How Odoo authenticates with the manager API">
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="staging_auth_type" class="col-lg-3"/>
+                                    <field name="staging_auth_type"/>
+                                </div>
+                            </div>
+                        </setting>
+                        <setting string="API Key"
+                                 invisible="staging_auth_type != 'api_key'"
+                                 help="Paste the API key generated in the manager">
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="staging_api_key" class="col-lg-3"/>
+                                    <field name="staging_api_key"
+                                           placeholder="Paste your API key here"/>
+                                </div>
+                            </div>
+                        </setting>
+                        <setting string="Basic Auth Credentials"
+                                 invisible="staging_auth_type != 'basic'"
+                                 help="Admin credentials for basic authentication">
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="staging_basic_user" class="col-lg-3"/>
+                                    <field name="staging_basic_user"
+                                           placeholder="admin"/>
+                                </div>
+                                <div class="row mt16">
+                                    <label for="staging_basic_password" class="col-lg-3"/>
+                                    <field name="staging_basic_password" password="True"
+                                           placeholder="password"/>
+                                </div>
+                            </div>
+                        </setting>
+                    </block>
+                    <block title="Synchronization" name="staging_sync">
+                        <setting string="Auto-sync interval"
+                                 help="How often to poll the manager for status updates (0 = disabled)">
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="staging_sync_interval" class="col-lg-3"/>
+                                    <field name="staging_sync_interval"/> minutes
+                                </div>
+                            </div>
+                        </setting>
+                    </block>
+                    <block title="Test Connection" name="staging_test_conn">
+                        <setting help="Verify the connection to the Staging Manager API">
+                            <button name="action_test_connection" type="object"
+                                    string="Test Connection"
+                                    class="btn-primary"/>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Wizard form -->
+    <record id="view_create_instance_wizard_form" model="ir.ui.view">
+        <field name="name">staging.instance.create.wizard.form</field>
+        <field name="model">staging.instance.create.wizard</field>
+        <field name="arch" type="xml">
+            <form>
+                <group>
+                    <field name="branch_name"/>
+                    <field name="label" placeholder="Optional label (e.g. Feature X)"/>
+                    <field name="ticket_url" placeholder="https://jira.example.com/PROJ-123" widget="url"/>
+                </group>
+                <group string="Modules (optional)">
+                    <field name="init_modules" placeholder="sale,purchase,stock"/>
+                    <field name="upgrade_modules" placeholder="staging_test"/>
+                </group>
+                <footer>
+                    <button name="action_create" type="object"
+                            string="Create Instance" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action to open the wizard -->
+    <record id="action_create_instance_wizard" model="ir.actions.act_window">
+        <field name="name">Create Instance</field>
+        <field name="res_model">staging.instance.create.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- Toolbar button in instances view header -->
+    <menuitem id="menu_create_instance"
+              name="Create Instance"
+              parent="menu_staging_manager_root"
+              action="action_create_instance_wizard"
+              sequence="20"/>
+
+</odoo>
