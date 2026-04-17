@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
+    <!-- Settings action (defined first so menuitem can reference it) -->
+    <record id="action_staging_settings" model="ir.actions.act_window">
+        <field name="name">Staging Manager Settings</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">inline</field>
+        <field name="context">{'module': 'staging_manager'}</field>
+    </record>
+
     <!-- Top-level app menu -->
     <menuitem id="menu_staging_manager_root"
               name="Staging Manager"
@@ -30,7 +39,7 @@
     <menuitem id="menu_staging_settings"
               name="Settings"
               parent="menu_staging_config"
-              action="base.action_general_configuration"
+              action="action_staging_settings"
               sequence="10"
               groups="base.group_system"/>
 
