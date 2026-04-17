@@ -15,7 +15,7 @@
         - Kanban board grouped by status
     """,
     "author": "Staging Manager",
-    "depends": ["base"],
+    "depends": ["base_setup"],
     "data": [
         "security/ir.model.access.csv",
         "data/ir_cron.xml",
