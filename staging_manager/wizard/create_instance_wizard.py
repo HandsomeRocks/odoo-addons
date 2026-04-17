@@ -67,17 +67,9 @@ class CreateInstanceWizard(models.TransientModel):
         self.env["staging.instance"]._upsert_from_api(result)
 
         return {
-            "type": "ir.actions.client",
-            "tag": "display_notification",
-            "params": {
-                "title": "Instance Created",
-                "message": f"Building instance for branch '{self.branch_name}'...",
-                "type": "success",
-                "sticky": False,
-                "next": {
-                    "type": "ir.actions.act_window",
-                    "res_model": "staging.instance",
-                    "view_mode": "kanban,tree,form",
-                },
-            },
+            "type": "ir.actions.act_window",
+            "name": "Staging Instances",
+            "res_model": "staging.instance",
+            "view_mode": "kanban,tree,form",
+            "target": "main",
         }
