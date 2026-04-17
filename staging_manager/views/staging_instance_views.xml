@@ -7,7 +7,7 @@
         <field name="model">staging.instance</field>
         <field name="arch" type="xml">
             <kanban default_group_by="status" class="o_kanban_small_column"
-                    quick_create="false" group_create="false"
+                    create="false" quick_create="false" group_create="false"
                     group_delete="false" group_edit="false"
                     records_draggable="false">
                 <field name="status"/>
@@ -84,7 +84,7 @@
         <field name="name">staging.instance.tree</field>
         <field name="model">staging.instance</field>
         <field name="arch" type="xml">
-            <tree decoration-muted="status == 'destroying'"
+            <tree create="false" decoration-muted="status == 'destroying'"
                   decoration-danger="status == 'error'"
                   decoration-success="status == 'running'">
                 <field name="branch_name"/>
