@@ -42,19 +42,35 @@ class ResConfigSettings(models.TransientModel):
 
     def action_test_connection(self):
         self.ensure_one()
+        Instance = self.env["staging.instance"]
         try:
-            resp = self.env["staging.instance"]._api_get("/api/health")
-            if resp.get("status") == "ok":
-                return {
-                    "type": "ir.actions.client",
-                    "tag": "display_notification",
-                    "params": {
-                        "title": "Connection Successful",
-                        "message": "Connected to the Staging Manager API.",
-                        "type": "success",
-                        "sticky": False,
-                    },
-                }
+            resp = Instance._api_get("/api/health")
+            if resp.get("status") != "ok":
+                raise UserError("Unexpected response from the Staging Manager API.")
+        except UserError:
+            raise
         except Exception as e:
             raise UserError(f"Connection failed: {e}")
-        raise UserError("Unexpected response from the Staging Manager API.")
+
+        try:
+            Instance.action_sync_all()
+            count = Instance.search_count([])
+            prod = Instance.search_count([("is_production", "=", True)])
+            parts = [f"Synced {count} instance(s)."]
+            if prod:
+                parts.append("Production instance imported.")
+            message = " ".join(parts)
+        except Exception as e:
+            _logger.warning("Connection OK but sync failed: %s", e)
+            message = "Connected successfully. Initial sync failed — try 'Sync from Manager' later."
+
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": "Connection Successful",
+                "message": message,
+                "type": "success",
+                "sticky": False,
+            },
+        }
