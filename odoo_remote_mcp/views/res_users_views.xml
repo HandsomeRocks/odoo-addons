@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Extend user form to show MCP tokens (admin view) -->
+    <record id="view_users_form_mcp_tokens" model="ir.ui.view">
+        <field name="name">res.users.form.mcp.tokens</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <!-- In v17, account_security page doesn't exist in the admin view, so we add after preferences -->
+            <xpath expr="//page[@name='preferences']" position="after">
+                <page string="MCP Tokens" name="mcp_tokens" groups="odoo_remote_mcp.group_mcp_user">
+                    <div class="text-muted mb-3">
+                        AI agent connections for this user.
+                    </div>
+                    <field name="mcp_oauth_token_ids" nolabel="1">
+                        <tree string="MCP Tokens" editable="bottom" delete="1" create="0">
+                            <field name="access_token_prefix" string="Token" readonly="1"/>
+                            <field name="scope" readonly="1"/>
+                            <field name="refresh_expires_at" readonly="1"/>
+                            <field name="expires_at" readonly="1"/>
+                            <field name="is_expired" readonly="1"/>
+                        </tree>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Extend user preferences form (simple view) to show MCP tokens in Security tab -->
+    <record id="view_users_form_simple_mcp_tokens" model="ir.ui.view">
+        <field name="name">res.users.form.simple.mcp.tokens</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form_simple_modif"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='page_account_security']" position="inside">
+                <div class="d-md-flex mt-3" groups="odoo_remote_mcp.group_mcp_user">
+                    <div class="col-md-6 col-lg-3 d-flex flex-column">
+                        <span class="o_form_label">MCP Access Tokens</span>
+                        <span class="text-muted">
+                            AI agent connections.
+                        </span>
+                    </div>
+                    <div class="w-md-50 w-lg-75 d-flex flex-column my-auto">
+                        <field name="mcp_oauth_token_ids" mode="tree" readonly="0" nolabel="1">
+                            <tree string="MCP Tokens" editable="bottom" delete="1" create="0">
+                                <field name="access_token_prefix" string="Token" readonly="1"/>
+                                <field name="scope" readonly="1"/>
+                                <field name="refresh_expires_at" readonly="1"/>
+                                <field name="expires_at" readonly="1"/>
+                                <field name="is_expired" readonly="1"/>
+                            </tree>
+                        </field>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>

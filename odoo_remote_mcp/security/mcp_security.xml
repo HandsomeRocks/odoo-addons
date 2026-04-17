@@ -1,0 +1,678 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- MCP Security Groups -->
+    <record id="module_category_mcp" model="ir.module.category">
+        <field name="name">Odoo MCP Server</field>
+        <field name="description">Model Context Protocol Server for AI Agents</field>
+        <field name="sequence">100</field>
+    </record>
+
+    <record id="group_mcp_user" model="res.groups">
+        <field name="name">MCP User</field>
+        <field name="category_id" ref="module_category_mcp"/>
+        <field name="comment">Can use MCP tools with read/write access to Odoo data</field>
+    </record>
+
+    <record id="group_mcp_admin" model="res.groups">
+        <field name="name">MCP Administrator</field>
+        <field name="category_id" ref="module_category_mcp"/>
+        <field name="comment">Can configure MCP settings and manage OAuth clients</field>
+        <field name="implied_ids" eval="[(4, ref('group_mcp_user'))]"/>
+        <field name="users" eval="[(4, ref('base.user_admin'))]"/>
+    </record>
+
+    <!-- Record Rules -->
+
+    <!-- OAuth Clients: Only admins can see all clients -->
+    <record id="mcp_oauth_client_rule_admin" model="ir.rule">
+        <field name="name">MCP OAuth Client: Admin Full Access</field>
+        <field name="model_id" ref="model_mcp_oauth_client"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_mcp_admin'))]"/>
+    </record>
+
+    <!-- OAuth Tokens: Users can see their own tokens -->
+    <record id="mcp_oauth_token_rule_user" model="ir.rule">
+        <field name="name">MCP OAuth Token: Own Tokens</field>
+        <field name="model_id" ref="model_mcp_oauth_token"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_mcp_user'))]"/>
+    </record>
+
+    <record id="mcp_oauth_token_rule_admin" model="ir.rule">
+        <field name="name">MCP OAuth Token: Admin Full Access</field>
+        <field name="model_id" ref="model_mcp_oauth_token"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_mcp_admin'))]"/>
+    </record>
+
+    <!-- OAuth Codes: Users can see their own codes -->
+    <record id="mcp_oauth_code_rule_user" model="ir.rule">
+        <field name="name">MCP OAuth Code: Own Codes</field>
+        <field name="model_id" ref="model_mcp_oauth_code"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_mcp_user'))]"/>
+    </record>
+
+    <record id="mcp_oauth_code_rule_admin" model="ir.rule">
+        <field name="name">MCP OAuth Code: Admin Full Access</field>
+        <field name="model_id" ref="model_mcp_oauth_code"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_mcp_admin'))]"/>
+    </record>
+
+    <!-- Execution Logs: Users can see their own logs -->
+    <record id="mcp_execution_log_rule_user" model="ir.rule">
+        <field name="name">MCP Execution Log: Own Logs</field>
+        <field name="model_id" ref="model_mcp_execution_log"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_mcp_user'))]"/>
+    </record>
+
+    <record id="mcp_execution_log_rule_admin" model="ir.rule">
+        <field name="name">MCP Execution Log: Admin Full Access</field>
+        <field name="model_id" ref="model_mcp_execution_log"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_mcp_admin'))]"/>
+    </record>
+
+    <!-- MCP Config: Admin only access -->
+    <record id="mcp_config_rule_admin" model="ir.rule">
+        <field name="name">MCP Config: Admin Access Only</field>
+        <field name="model_id" ref="model_mcp_config"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_mcp_admin'))]"/>
+    </record>
+
+    <!-- MCP Prompts: Users can read/write their own prompts, read shared prompts -->
+    <record id="mcp_prompt_rule_user_own" model="ir.rule">
+        <field name="name">MCP Prompt: Own Prompts (Full Access)</field>
+        <field name="model_id" ref="model_mcp_prompt"/>
+        <field name="domain_force">[('owner_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_mcp_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="mcp_prompt_rule_user_shared" model="ir.rule">
+        <field name="name">MCP Prompt: Shared Prompts (Read Only)</field>
+        <field name="model_id" ref="model_mcp_prompt"/>
+        <field name="domain_force">[
+            ('owner_id', '!=', user.id),
+            '|',
+            ('share_with_all_users', '=', True),
+            ('shared_user_ids', 'in', [user.id]),
+        ]</field>
+        <field name="groups" eval="[(4, ref('group_mcp_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="mcp_prompt_rule_admin" model="ir.rule">
+        <field name="name">MCP Prompt: Admin Full Access</field>
+        <field name="model_id" ref="model_mcp_prompt"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_mcp_admin'))]"/>
+    </record>
+
+    <!-- MCP Prompt Arguments: Follow parent prompt visibility -->
+    <record id="mcp_prompt_argument_rule_user_own" model="ir.rule">
+        <field name="name">MCP Prompt Argument: Own Prompts (Full Access)</field>
+        <field name="model_id" ref="model_mcp_prompt_argument"/>
+        <field name="domain_force">[('prompt_id.owner_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_mcp_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="mcp_prompt_argument_rule_user_shared" model="ir.rule">
+        <field name="name">MCP Prompt Argument: Shared Prompts (Read Only)</field>
+        <field name="model_id" ref="model_mcp_prompt_argument"/>
+        <field name="domain_force">[
+            ('prompt_id.owner_id', '!=', user.id),
+            '|',
+            ('prompt_id.share_with_all_users', '=', True),
+            ('prompt_id.shared_user_ids', 'in', [user.id]),
+        ]</field>
+        <field name="groups" eval="[(4, ref('group_mcp_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="mcp_prompt_argument_rule_admin" model="ir.rule">
+        <field name="name">MCP Prompt Argument: Admin Full Access</field>
+        <field name="model_id" ref="model_mcp_prompt_argument"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_mcp_admin'))]"/>
+    </record>
+
+    <!-- MCP ECharts: Users can read/write their own charts, read shared charts -->
+    <record id="mcp_echart_rule_user_own" model="ir.rule">
+        <field name="name">MCP EChart: Own Charts (Full Access)</field>
+        <field name="model_id" ref="model_mcp_echart"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_mcp_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="mcp_echart_rule_user_shared" model="ir.rule">
+        <field name="name">MCP EChart: Shared Charts (Read Only)</field>
+        <field name="model_id" ref="model_mcp_echart"/>
+        <field name="domain_force">[
+            ('user_id', '!=', user.id),
+            '|', '|',
+            ('share_with_all_users', '=', True),
+            ('shared_user_ids', 'in', [user.id]),
+            ('shared_group_ids', 'in', user.groups_id.ids),
+        ]</field>
+        <field name="groups" eval="[(4, ref('group_mcp_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="mcp_echart_rule_admin" model="ir.rule">
+        <field name="name">MCP EChart: Admin Full Access</field>
+        <field name="model_id" ref="model_mcp_echart"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_mcp_admin'))]"/>
+    </record>
+
+    <!-- MCP EChart: Internal users can read charts shared with them via groups -->
+    <record id="mcp_echart_rule_internal_user" model="ir.rule">
+        <field name="name">MCP EChart: Internal User (Read Shared)</field>
+        <field name="model_id" ref="model_mcp_echart"/>
+        <field name="domain_force">[
+            '|', '|',
+            ('share_with_all_users', '=', True),
+            ('shared_user_ids', 'in', [user.id]),
+            ('shared_group_ids', 'in', user.groups_id.ids),
+        ]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- =======================================================================
+         MCP WebApps
+         Access controlled via shared_user_ids and shared_group_ids
+         ======================================================================= -->
+
+    <!-- MCP WebApps: MCP Users - own webapps (full access) -->
+    <record id="mcp_webapp_rule_user_own" model="ir.rule">
+        <field name="name">MCP WebApp: Own WebApps (Full Access)</field>
+        <field name="model_id" ref="model_mcp_webapp"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_mcp_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <!-- MCP WebApps: MCP Users - shared webapps (read only) -->
+    <record id="mcp_webapp_rule_user_shared" model="ir.rule">
+        <field name="name">MCP WebApp: Shared WebApps (Read Only)</field>
+        <field name="model_id" ref="model_mcp_webapp"/>
+        <field name="domain_force">[
+            ('user_id', '!=', user.id),
+            '|',
+            ('shared_user_ids', 'in', [user.id]),
+            ('shared_group_ids', 'in', user.groups_id.ids),
+        ]</field>
+        <field name="groups" eval="[(4, ref('group_mcp_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- MCP WebApps: Admin - full access -->
+    <record id="mcp_webapp_rule_admin" model="ir.rule">
+        <field name="name">MCP WebApp: Admin Full Access</field>
+        <field name="model_id" ref="model_mcp_webapp"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_mcp_admin'))]"/>
+    </record>
+
+    <!-- MCP WebApps: Internal users - read shared webapps -->
+    <record id="mcp_webapp_rule_internal_user" model="ir.rule">
+        <field name="name">MCP WebApp: Internal User (Read Shared)</field>
+        <field name="model_id" ref="model_mcp_webapp"/>
+        <field name="domain_force">[
+            '|',
+            ('shared_user_ids', 'in', [user.id]),
+            ('shared_group_ids', 'in', user.groups_id.ids),
+        ]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- MCP WebApps: Portal users - read shared webapps -->
+    <record id="mcp_webapp_rule_portal_user" model="ir.rule">
+        <field name="name">MCP WebApp: Portal User (Read Shared)</field>
+        <field name="model_id" ref="model_mcp_webapp"/>
+        <field name="domain_force">[
+            '|',
+            ('shared_user_ids', 'in', [user.id]),
+            ('shared_group_ids', 'in', user.groups_id.ids),
+        ]</field>
+        <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- MCP WebApp Pages: Follow parent webapp visibility -->
+    <record id="mcp_webapp_page_rule_user_own" model="ir.rule">
+        <field name="name">MCP WebApp Page: Own WebApps (Full Access)</field>
+        <field name="model_id" ref="model_mcp_webapp_page"/>
+        <field name="domain_force">[('webapp_id.user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_mcp_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="mcp_webapp_page_rule_user_shared" model="ir.rule">
+        <field name="name">MCP WebApp Page: Shared WebApps (Read Only)</field>
+        <field name="model_id" ref="model_mcp_webapp_page"/>
+        <field name="domain_force">[
+            ('webapp_id.user_id', '!=', user.id),
+            '|',
+            ('webapp_id.shared_user_ids', 'in', [user.id]),
+            ('webapp_id.shared_group_ids', 'in', user.groups_id.ids),
+        ]</field>
+        <field name="groups" eval="[(4, ref('group_mcp_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="mcp_webapp_page_rule_admin" model="ir.rule">
+        <field name="name">MCP WebApp Page: Admin Full Access</field>
+        <field name="model_id" ref="model_mcp_webapp_page"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_mcp_admin'))]"/>
+    </record>
+
+    <!-- MCP WebApp Pages: Internal users - read shared webapp pages -->
+    <record id="mcp_webapp_page_rule_internal_user" model="ir.rule">
+        <field name="name">MCP WebApp Page: Internal User (Read Shared)</field>
+        <field name="model_id" ref="model_mcp_webapp_page"/>
+        <field name="domain_force">[
+            '|',
+            ('webapp_id.shared_user_ids', 'in', [user.id]),
+            ('webapp_id.shared_group_ids', 'in', user.groups_id.ids),
+        ]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- MCP WebApp Pages: Portal users - read shared webapp pages -->
+    <record id="mcp_webapp_page_rule_portal_user" model="ir.rule">
+        <field name="name">MCP WebApp Page: Portal User (Read Shared)</field>
+        <field name="model_id" ref="model_mcp_webapp_page"/>
+        <field name="domain_force">[
+            '|',
+            ('webapp_id.shared_user_ids', 'in', [user.id]),
+            ('webapp_id.shared_group_ids', 'in', user.groups_id.ids),
+        ]</field>
+        <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- =======================================================================
+         MCP WebApp Page Files: Follow parent page → webapp visibility
+         ======================================================================= -->
+
+    <!-- Page Files: MCP Users - own webapps (full access) -->
+    <record id="mcp_webapp_page_file_rule_user_own" model="ir.rule">
+        <field name="name">MCP WebApp Page File: Own WebApps (Full Access)</field>
+        <field name="model_id" ref="model_mcp_webapp_page_file"/>
+        <field name="domain_force">[('page_id.webapp_id.user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_mcp_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <!-- Page Files: MCP Users - shared webapps (read only) -->
+    <record id="mcp_webapp_page_file_rule_user_shared" model="ir.rule">
+        <field name="name">MCP WebApp Page File: Shared WebApps (Read Only)</field>
+        <field name="model_id" ref="model_mcp_webapp_page_file"/>
+        <field name="domain_force">[
+            ('page_id.webapp_id.user_id', '!=', user.id),
+            '|',
+            ('page_id.webapp_id.shared_user_ids', 'in', [user.id]),
+            ('page_id.webapp_id.shared_group_ids', 'in', user.groups_id.ids),
+        ]</field>
+        <field name="groups" eval="[(4, ref('group_mcp_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- Page Files: Admin - full access -->
+    <record id="mcp_webapp_page_file_rule_admin" model="ir.rule">
+        <field name="name">MCP WebApp Page File: Admin Full Access</field>
+        <field name="model_id" ref="model_mcp_webapp_page_file"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_mcp_admin'))]"/>
+    </record>
+
+    <!-- Page Files: Internal users - read shared only -->
+    <record id="mcp_webapp_page_file_rule_internal_user" model="ir.rule">
+        <field name="name">MCP WebApp Page File: Internal User (Read Shared)</field>
+        <field name="model_id" ref="model_mcp_webapp_page_file"/>
+        <field name="domain_force">[
+            '|',
+            ('page_id.webapp_id.shared_user_ids', 'in', [user.id]),
+            ('page_id.webapp_id.shared_group_ids', 'in', user.groups_id.ids),
+        ]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- Page Files: Portal users - read shared only -->
+    <record id="mcp_webapp_page_file_rule_portal_user" model="ir.rule">
+        <field name="name">MCP WebApp Page File: Portal User (Read Shared)</field>
+        <field name="model_id" ref="model_mcp_webapp_page_file"/>
+        <field name="domain_force">[
+            '|',
+            ('page_id.webapp_id.shared_user_ids', 'in', [user.id]),
+            ('page_id.webapp_id.shared_group_ids', 'in', user.groups_id.ids),
+        ]</field>
+        <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- Page Files: Public users - read shared only (group-based) -->
+    <record id="mcp_webapp_page_file_rule_public_user" model="ir.rule">
+        <field name="name">MCP WebApp Page File: Public User (Read Shared Only)</field>
+        <field name="model_id" ref="model_mcp_webapp_page_file"/>
+        <field name="domain_force">[('page_id.webapp_id.shared_group_ids', 'in', user.groups_id.ids)]</field>
+        <field name="groups" eval="[(4, ref('base.group_public'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- MCP WebApp Endpoints: Follow parent webapp visibility -->
+    <record id="mcp_webapp_endpoint_rule_user_own" model="ir.rule">
+        <field name="name">MCP WebApp Endpoint: Own WebApps (Full Access)</field>
+        <field name="model_id" ref="model_mcp_webapp_endpoint"/>
+        <field name="domain_force">[('webapp_id.user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_mcp_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="mcp_webapp_endpoint_rule_user_shared" model="ir.rule">
+        <field name="name">MCP WebApp Endpoint: Shared WebApps (Read Only)</field>
+        <field name="model_id" ref="model_mcp_webapp_endpoint"/>
+        <field name="domain_force">[
+            ('webapp_id.user_id', '!=', user.id),
+            '|',
+            ('webapp_id.shared_user_ids', 'in', [user.id]),
+            ('webapp_id.shared_group_ids', 'in', user.groups_id.ids),
+        ]</field>
+        <field name="groups" eval="[(4, ref('group_mcp_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="mcp_webapp_endpoint_rule_admin" model="ir.rule">
+        <field name="name">MCP WebApp Endpoint: Admin Full Access</field>
+        <field name="model_id" ref="model_mcp_webapp_endpoint"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_mcp_admin'))]"/>
+    </record>
+
+    <!-- MCP WebApp Endpoints: Internal users - read shared webapp endpoints -->
+    <record id="mcp_webapp_endpoint_rule_internal_user" model="ir.rule">
+        <field name="name">MCP WebApp Endpoint: Internal User (Read Shared)</field>
+        <field name="model_id" ref="model_mcp_webapp_endpoint"/>
+        <field name="domain_force">[
+            '|',
+            ('webapp_id.shared_user_ids', 'in', [user.id]),
+            ('webapp_id.shared_group_ids', 'in', user.groups_id.ids),
+        ]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- MCP WebApp Endpoints: Portal users - read shared webapp endpoints -->
+    <record id="mcp_webapp_endpoint_rule_portal_user" model="ir.rule">
+        <field name="name">MCP WebApp Endpoint: Portal User (Read Shared)</field>
+        <field name="model_id" ref="model_mcp_webapp_endpoint"/>
+        <field name="domain_force">[
+            '|',
+            ('webapp_id.shared_user_ids', 'in', [user.id]),
+            ('webapp_id.shared_group_ids', 'in', user.groups_id.ids),
+        ]</field>
+        <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- =======================================================================
+         MCP WebApp User Storage
+         Users can only access their own storage for webapps they have access to
+         ======================================================================= -->
+
+    <!-- Storage: MCP Users - own storage for accessible webapps -->
+    <record id="mcp_webapp_storage_rule_user" model="ir.rule">
+        <field name="name">MCP WebApp Storage: Own Storage (Accessible WebApps)</field>
+        <field name="model_id" ref="model_mcp_webapp_user_storage"/>
+        <field name="domain_force">[
+            ('user_id', '=', user.id),
+            '|', '|',
+            ('webapp_id.user_id', '=', user.id),
+            ('webapp_id.shared_user_ids', 'in', [user.id]),
+            ('webapp_id.shared_group_ids', 'in', user.groups_id.ids),
+        ]</field>
+        <field name="groups" eval="[(4, ref('group_mcp_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <!-- Storage: Admin - full access (for debugging/support) -->
+    <record id="mcp_webapp_storage_rule_admin" model="ir.rule">
+        <field name="name">MCP WebApp Storage: Admin Full Access</field>
+        <field name="model_id" ref="model_mcp_webapp_user_storage"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_mcp_admin'))]"/>
+    </record>
+
+    <!-- Storage: Internal users - own storage for shared webapps -->
+    <record id="mcp_webapp_storage_rule_internal" model="ir.rule">
+        <field name="name">MCP WebApp Storage: Internal User (Own Storage, Shared WebApps)</field>
+        <field name="model_id" ref="model_mcp_webapp_user_storage"/>
+        <field name="domain_force">[
+            ('user_id', '=', user.id),
+            '|',
+            ('webapp_id.shared_user_ids', 'in', [user.id]),
+            ('webapp_id.shared_group_ids', 'in', user.groups_id.ids),
+        ]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- Storage: Portal users - own storage for shared webapps -->
+    <record id="mcp_webapp_storage_rule_portal" model="ir.rule">
+        <field name="name">MCP WebApp Storage: Portal User (Own Storage, Shared WebApps)</field>
+        <field name="model_id" ref="model_mcp_webapp_user_storage"/>
+        <field name="domain_force">[
+            ('user_id', '=', user.id),
+            '|',
+            ('webapp_id.shared_user_ids', 'in', [user.id]),
+            ('webapp_id.shared_group_ids', 'in', user.groups_id.ids),
+        ]</field>
+        <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- =======================================================================
+         Public User Access (Anonymous/Unauthenticated)
+         Public users can only access webapps explicitly shared with base.group_public
+         Storage access is session-based and handled entirely in controller logic
+         ======================================================================= -->
+
+    <!-- MCP WebApps: Public users - only webapps shared with public group -->
+    <record id="mcp_webapp_rule_public_user" model="ir.rule">
+        <field name="name">MCP WebApp: Public User (Read Shared Only)</field>
+        <field name="model_id" ref="model_mcp_webapp"/>
+        <field name="domain_force">[('shared_group_ids', 'in', user.groups_id.ids)]</field>
+        <field name="groups" eval="[(4, ref('base.group_public'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- MCP WebApp Pages: Public users - follow parent webapp -->
+    <record id="mcp_webapp_page_rule_public_user" model="ir.rule">
+        <field name="name">MCP WebApp Page: Public User (Read Shared Only)</field>
+        <field name="model_id" ref="model_mcp_webapp_page"/>
+        <field name="domain_force">[('webapp_id.shared_group_ids', 'in', user.groups_id.ids)]</field>
+        <field name="groups" eval="[(4, ref('base.group_public'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- MCP WebApp Endpoints: Public users - follow parent webapp -->
+    <record id="mcp_webapp_endpoint_rule_public_user" model="ir.rule">
+        <field name="name">MCP WebApp Endpoint: Public User (Read Shared Only)</field>
+        <field name="model_id" ref="model_mcp_webapp_endpoint"/>
+        <field name="domain_force">[('webapp_id.shared_group_ids', 'in', user.groups_id.ids)]</field>
+        <field name="groups" eval="[(4, ref('base.group_public'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- Storage: Public users - session-based access
+         Note: Session ID is not available in domain_force context, so this rule
+         effectively blocks all ORM access. Storage access for public users MUST
+         go through the controller which properly validates session_id.
+         The CSV access rights allow controller operations via sudo(). -->
+    <record id="mcp_webapp_storage_rule_public" model="ir.rule">
+        <field name="name">MCP WebApp Storage: Public User (Controller Only)</field>
+        <field name="model_id" ref="model_mcp_webapp_user_storage"/>
+        <field name="domain_force">[('id', '=', False)]</field>
+        <field name="groups" eval="[(4, ref('base.group_public'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- =======================================================================
+         MCP API Keys: Admin only access
+         ======================================================================= -->
+
+    <record id="mcp_api_key_rule_admin" model="ir.rule">
+        <field name="name">MCP API Key: Admin Full Access</field>
+        <field name="model_id" ref="model_mcp_api_key"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_mcp_admin'))]"/>
+    </record>
+
+    <!-- =======================================================================
+         MCP Modules
+         Users can manage their own modules, admins have full access
+         ======================================================================= -->
+
+    <record id="mcp_module_rule_user_own" model="ir.rule">
+        <field name="name">MCP Module: Own Modules (Full Access)</field>
+        <field name="model_id" ref="model_mcp_module"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_mcp_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="mcp_module_rule_admin" model="ir.rule">
+        <field name="name">MCP Module: Admin Full Access</field>
+        <field name="model_id" ref="model_mcp_module"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_mcp_admin'))]"/>
+    </record>
+
+    <!-- MCP Module Files: Follow parent module visibility -->
+    <record id="mcp_module_file_rule_user_own" model="ir.rule">
+        <field name="name">MCP Module File: Own Modules (Full Access)</field>
+        <field name="model_id" ref="model_mcp_module_file"/>
+        <field name="domain_force">[('module_id.user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_mcp_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <record id="mcp_module_file_rule_admin" model="ir.rule">
+        <field name="name">MCP Module File: Admin Full Access</field>
+        <field name="model_id" ref="model_mcp_module_file"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_mcp_admin'))]"/>
+    </record>
+</odoo>

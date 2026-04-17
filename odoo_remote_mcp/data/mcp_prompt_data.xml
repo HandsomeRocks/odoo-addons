@@ -1,0 +1,529 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!--
+    MCP Prompt Examples
+    These demonstrate the module's capabilities and provide useful starting points.
+    -->
+
+    <!-- 1. Find Customer (search_read) -->
+    <record id="prompt_find_customer" model="mcp.prompt">
+        <field name="name">find_customer</field>
+        <field name="title">Find Customer</field>
+        <field name="description">Search for a customer in Odoo by name or email address</field>
+        <field name="sequence">10</field>
+        <field name="share_with_all_users">True</field>
+        <field name="template">Search for a customer matching "{{query}}" using the search_read tool on res.partner model.
+
+Search criteria: Find records where the name contains "{{query}}" OR the email contains "{{query}}" (case-insensitive).
+
+Fields to return: name, email, phone, city, country_id, is_company, parent_id.
+
+If you find multiple matches, list them all with their key details. If none found, say so clearly.</field>
+    </record>
+
+    <record id="prompt_find_customer_arg_query" model="mcp.prompt.argument">
+        <field name="prompt_id" ref="prompt_find_customer"/>
+        <field name="name">query</field>
+        <field name="description">Customer name or email to search for</field>
+        <field name="required" eval="True"/>
+        <field name="sequence">10</field>
+    </record>
+
+    <!-- 2. Batch Create Contact (create_record) -->
+    <record id="prompt_create_contacts" model="mcp.prompt">
+        <field name="name">batch_create_dummy_contacts</field>
+        <field name="title">Batch Create Contacts</field>
+        <field name="description">Batch create new dummy test contacts in Odoo</field>
+        <field name="sequence">40</field>
+        <field name="share_with_all_users">True</field>
+        <field name="template">Create {{number_of_contacts}} new dummy testing contacts in Odoo using odoo mcp create tool on res.partner with random details.
+
+            Ensure all required fields are included, use field schema tool call for this if necessary on res.partner, ensure add full address details and populate 'website' and 'email' field for each contact.
+            Dont include any other non required fields outside these.
+        </field>
+    </record>
+
+    <record id="prompt_create_contact_arg_name" model="mcp.prompt.argument">
+        <field name="prompt_id" ref="prompt_create_contacts"/>
+        <field name="name">number_of_contacts</field>
+        <field name="description">Number of contacts to generate</field>
+        <field name="required" eval="True"/>
+        <field name="sequence">10</field>
+    </record>
+
+
+    <!-- 2. batch update contacts (update_record) -->
+    <record id="prompt_update_contacts" model="mcp.prompt">
+        <field name="name">find_and_update_contacts</field>
+        <field name="title">Bulk update contacts with poem</field>
+        <field name="description">Bulk update matching contacts with tailored poem in notes</field>
+        <field name="sequence">50</field>
+        <field name="share_with_all_users">True</field>
+        <field name="template">First find all contacts containing the following name or email (case insensitive) using odoo mcp search tool call: {{contact_name_or_email}}
+
+        If contacts are found, for each contact update the internal notes field (technical name: comment) with a random poem related to there name
+        using batch write mcp tool call.</field>
+    </record>
+
+
+    <record id="prompt_update_contact_arg_id" model="mcp.prompt.argument">
+        <field name="prompt_id" ref="prompt_update_contacts"/>
+        <field name="name">contact_name_or_email</field>
+        <field name="description">Contact Names or Emails to match (case insensitive)</field>
+        <field name="required" eval="True"/>
+        <field name="sequence">10</field>
+    </record>
+
+    <!-- 3. respond to message on sale order-->
+    <record id="prompt_send_messages_to_user" model="mcp.prompt">
+        <field name="name">respond_to_latest_message</field>
+        <field name="title">message responder</field>
+        <field name="description">auto respond to sale enquiry</field>
+        <field name="sequence">50</field>
+        <field name="share_with_all_users">True</field>
+        <field name="template">
+        Search for the sale order reference: {{sale_order_ref}}. Find the most recently created mail.message, read the body, and draft a response/send it using the execute_method
+        mcp tool.</field>
+    </record>
+
+    <record id="prompt_arg_sale_ref" model="mcp.prompt.argument">
+        <field name="prompt_id" ref="prompt_send_messages_to_user"/>
+        <field name="name">sale_order_ref</field>
+        <field name="description">Sale order reference</field>
+        <field name="required" eval="True"/>
+        <field name="sequence">10</field>
+    </record>
+
+    <!-- 4. respond to message on sale order-->
+    <record id="prompt_sale_order_attachments" model="mcp.prompt">
+        <field name="name">read_sale_order_attachments</field>
+        <field name="title">Sale Attachment Reader</field>
+        <field name="description">Read all attachments for a given sale order</field>
+        <field name="sequence">50</field>
+        <field name="share_with_all_users">True</field>
+        <field name="template">
+        Search for the sale order reference: {{sale_order_ref}}, and read all attachments relating to this sale order ensuring that you include the datas field.</field>
+    </record>
+
+    <record id="prompt_arg_sale_ref_attachment" model="mcp.prompt.argument">
+        <field name="prompt_id" ref="prompt_sale_order_attachments"/>
+        <field name="name">sale_order_ref</field>
+        <field name="description">Sale order reference</field>
+        <field name="required" eval="True"/>
+        <field name="sequence">10</field>
+    </record>
+
+
+
+    <!-- 5. Sales Summary (search_read) -->
+    <record id="prompt_sales_summary" model="mcp.prompt">
+        <field name="name">sales_summary</field>
+        <field name="title">Sales Summary</field>
+        <field name="description">Get a summary of recent sales orders</field>
+        <field name="sequence">60</field>
+        <field name="share_with_all_users">True</field>
+        <field name="template">Analyze recent sales orders using search_read mcp tool on sale.order
+
+Time period: Look at orders from the last {{days}} days (default to 30 if not specified).
+
+Use domain with date_order filter relative to today's date.
+
+Apply the following customer name OR email (case insensitive containing) filter to customer field on sale order only if present below:
+filter: {{customer_name_or_email}}
+
+Retrieve fields: name, partner_id, date_order, amount_total, state, user_id
+
+Group the results by state and calculate:
+- Number of orders in each state
+- Total amount per state
+- Overall totals
+
+Present a clear summary with these metrics.</field>
+    </record>
+    <record id="prompt_sales_summary_arg_days" model="mcp.prompt.argument">
+        <field name="prompt_id" ref="prompt_sales_summary"/>
+        <field name="name">days</field>
+        <field name="description">Number of days to look back (default: 30)</field>
+        <field name="required" eval="False"/>
+        <field name="sequence">10</field>
+    </record>
+    <record id="prompt_sales_summary_customer_filter" model="mcp.prompt.argument">
+        <field name="prompt_id" ref="prompt_sales_summary"/>
+        <field name="name">customer_name_or_email</field>
+        <field name="description">Customer name or email to filter on (case insensitive)</field>
+        <field name="required" eval="False"/>
+        <field name="sequence">10</field>
+    </record>
+
+    <!-- 6. Explore Code (code_search + code_read) -->
+    <record id="prompt_explore_code" model="mcp.prompt">
+        <field name="name">explore_code</field>
+        <field name="title">Explore Source Code</field>
+        <field name="description">Search source code to understand and generate testing notes for features</field>
+        <field name="sequence">80</field>
+        <field name="share_with_all_users">True</field>
+        <field name="template">ou are a testing documentation expert. Generate testing notes for this feature using code search and read tools to investigate.
+
+Module: {{module}}
+Feature: {{feature}}
+
+OUTPUT FORMAT: Markdown (.md file)
+
+Generate the following 5 sections:
+
+1. BUSINESS LOGIC SUMMARY
+
+Explain what the feature does, why it matters, key business rules, and workflows. Keep to 2-3 paragraphs.
+
+2. TEST STRATEGY
+
+- What IS tested: [List key areas to test]
+- What is NOT tested: [List out of scope items and why]
+- Test Categories: Happy Path, Error Handling, Security, Edge Cases
+- Risk Areas: Identify high/medium/low priority areas
+
+3. TEST CASES
+
+For each test case, provide:
+
+TC-001: [Brief Title]
+Description: [What is being tested]
+Category: [Happy Path / Error / Security / Edge Case]
+Priority: [Critical / High / Medium / Low]
+Preconditions: [Setup or state needed]
+Steps:
+  1. [First action]
+  2. [Second action]
+  3. [Third action]
+Expected Result: [What should happen]
+
+---
+
+Repeat for each test case. Organize by category if helpful.
+
+4. EDGE CASES and ERROR SCENARIOS
+
+List boundary conditions, special cases, error handling, degraded states, and concurrent scenarios relevant to this feature.
+
+5. TEST DATA and DEPENDENCIES
+
+Test Data:
+- [Type of data needed: users, tokens, config, records, etc.]
+- [Specific test data required]
+
+Dependencies:
+- [What this feature depends on]
+- [What features depend on this]
+
+
+MARKDOWN OUTPUT GUIDELINES
+
+Use minimal, basic typography:
+
+# Main title (one # symbol)
+## Section heading (two # symbols)
+
+Paragraphs: Separated by blank lines
+Lists: Use - for bullets, numbers 1. 2. 3. for steps
+Code: Use backticks for model names like `res.partner` or field names like `state`
+Bold: Use **bold** only for field labels like **Description:**
+Tables: Use pipe | format for test case structure
+
+Keep formatting simple and clean. No special characters, no fancy formatting.
+    </field>
+    </record>
+    <record id="prompt_explore_feature" model="mcp.prompt.argument">
+        <field name="prompt_id" ref="prompt_explore_code"/>
+        <field name="name">feature</field>
+        <field name="description">Describe the feature want to investigate/generate testing notes for.</field>
+        <field name="required" eval="True"/>
+        <field name="sequence">10</field>
+    </record>
+    <record id="prompt_explore_code_arg_module" model="mcp.prompt.argument">
+        <field name="prompt_id" ref="prompt_explore_code"/>
+        <field name="name">module</field>
+        <field name="description">Limit search to specific addon module name (e.g., sale, stock, account)</field>
+        <field name="required" eval="False"/>
+        <field name="sequence">20</field>
+    </record>
+
+    <!-- 7. Research and Execute (code_search + code_read + execute_orm) -->
+    <record id="prompt_research_and_execute" model="mcp.prompt">
+        <field name="name">research_and_execute</field>
+        <field name="title">Research and Execute Custom Logic</field>
+        <field name="description">Research how to implement a feature by exploring Odoo source code, then execute custom ORM code to accomplish it</field>
+        <field name="sequence">100</field>
+        <field name="share_with_all_users">True</field>
+        <field name="template">I need to accomplish the following task: {{task}}
+
+Please follow this careful workflow:
+
+**STEP 1: Research Phase**
+Before writing any code, research the correct approach:
+- Use code_search to find relevant model definitions and methods in Odoo source
+- Use code_read to examine implementation details of key methods
+- Identify the correct models, fields, and method patterns to use
+- Look for similar operations in existing Odoo code
+
+**STEP 2: Plan Phase**
+Based on your research:
+- Explain what ORM operations are needed
+- Show me the exact code you plan to execute
+- Explain any potential risks or side effects
+- Verify the code uses correct Odoo patterns (don't guess - confirm from source)
+
+**STEP 3: Execute Phase**
+IMPORTANT: Only proceed if you're confident the approach is correct.
+
+Use execute_orm with carefully researched code:
+- The code should assign its result to the `result` variable
+- Handle potential errors gracefully
+- Report exactly what was done
+
+**STEP 4: Verify**
+After execution:
+- Confirm the operation succeeded
+- Show the results or affected records
+- Note any follow-up actions needed
+    </field>
+    </record>
+    <record id="prompt_research_and_execute_arg_task" model="mcp.prompt.argument">
+        <field name="prompt_id" ref="prompt_research_and_execute"/>
+        <field name="name">task</field>
+        <field name="description">What you want to accomplish (e.g., "archive all draft quotations older than 90 days")</field>
+        <field name="required" eval="True"/>
+        <field name="sequence">10</field>
+    </record>
+
+    <!-- 8. Create EChart Dashboard (create_echart) -->
+    <record id="prompt_create_echart_dashboard" model="mcp.prompt">
+        <field name="name">create_dashboard</field>
+        <field name="title">Create EChart Dashboard</field>
+        <field name="description">Generate an interactive ECharts dashboard from Odoo data using the create_echart tool</field>
+        <field name="sequence">110</field>
+        <field name="share_with_all_users">True</field>
+        <field name="template">Create a dynamic ECharts dashboard visualization using the create_echart tool.
+
+**Dashboard Request:** {{dashboard_description}}
+
+**IMPORTANT GUIDELINES:**
+
+1. **Data Code (Python):**
+   - Use `env` to query Odoo models (e.g., `env['sale.order']`, `env['res.partner']`)
+   - Use `read_group()` for aggregated data, `search_read()` for detailed records
+   - Assign the final data dictionary to `result` variable
+   - Structure data as needed for chart type (arrays for bar/line, name/value pairs for pie)
+   - NO imports allowed - use pre-imported helpers: datetime, timedelta, relativedelta, json
+
+2. **Chart Options (ECharts JSON):**
+   - Use ECharts 6.x configuration format
+   - Reference data using `$data.xxx` placeholders (e.g., `$data.labels`, `$data.values`)
+   - Include: title, tooltip, legend (if multiple series), axis config, series
+   - Use percentage positioning for responsive layouts (e.g., `"top": "10%"`)
+
+3. **Chart Type Selection:**
+   - **Bar/Line Charts:** For time series, comparisons. Use `xAxis.data` for categories, `series.data` for values
+   - **Pie/Donut Charts:** For proportions. Use `series.data: [{name, value}, ...]`
+   - **Mixed Charts:** Combine types for richer insights
+
+4. **JavaScript Functions (optional):**
+   - For custom formatters, prefix with `__fn__:` (e.g., `"formatter": "__fn__:function(p){return p.value.toLocaleString()}"`)
+
+**Example Structure:**
+```
+data_code:
+orders = env['sale.order'].read_group(
+    [('state', 'in', ['sale', 'done'])],
+    ['amount_total:sum'],
+    ['date_order:month'],
+    orderby='date_order:month'
+)
+result = {
+    'months': [o['date_order:month'] for o in orders],
+    'totals': [o['amount_total'] for o in orders]
+}
+
+chart_options:
+{
+  "title": {"text": "Monthly Sales", "left": "center"},
+  "tooltip": {"trigger": "axis"},
+  "xAxis": {"type": "category", "data": "$data.months"},
+  "yAxis": {"type": "value"},
+  "series": [{"type": "bar", "data": "$data.totals", "itemStyle": {"color": "#714B67"}}]
+}
+```
+
+Please create the dashboard with:
+- A descriptive title
+- Appropriate chart type for the data
+- Clean, professional styling (consider using Odoo purple #714B67)
+- Set `share_with_all_users: true` so the dashboard is accessible
+
+After creation, provide the dashboard URL so it can be viewed immediately.</field>
+    </record>
+
+    <record id="prompt_create_echart_arg_description" model="mcp.prompt.argument">
+        <field name="prompt_id" ref="prompt_create_echart_dashboard"/>
+        <field name="name">dashboard_description</field>
+        <field name="description">Describe the dashboard you want (e.g., "sales by month for the current year", "top 10 customers by revenue", "product category distribution")</field>
+        <field name="required" eval="True"/>
+        <field name="sequence">10</field>
+    </record>
+
+    <!-- 9. Advanced EChart: 3D Globe Command Center -->
+    <record id="prompt_create_globe_dashboard" model="mcp.prompt">
+        <field name="name">create_3d_globe</field>
+        <field name="title">3D Globe Command Center</field>
+        <field name="description">Create a stunning 3D globe visualization showing global business activity using echarts-gl</field>
+        <field name="sequence">120</field>
+        <field name="share_with_all_users">True</field>
+        <field name="template">Create a 3D globe dashboard titled "Global Sales Command Center" using echarts-gl.
+
+Use this globe texture URL: https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg
+
+**Data from Odoo:**
+- Customers grouped by country
+- Sale orders from the last {{days}} days grouped by partner country
+- Revenue per country
+- Summary stats: countries, customers, revenue, orders
+
+**Layout:**
+- Compact single-line header bar (max 50px) with title and small inline stat badges — the globe must be visible without scrolling
+- Revenue filter slider as a small floating panel on the left side, overlaying the globe
+
+**Globe features:**
+- Scatter points sized by customer count, colored by revenue level
+- 3D bar columns on the top 5 revenue countries
+- Animated arcs from order countries to HQ
+- Slow auto-rotation with atmosphere glow
+- Clickable countries showing a detail panel with flag, name, customers, orders, and revenue — closes on click, no auto-dismiss
+
+Professional dark theme. Coordinate lookup for major countries.</field>
+    </record>
+
+    <record id="prompt_create_globe_arg_days" model="mcp.prompt.argument">
+        <field name="prompt_id" ref="prompt_create_globe_dashboard"/>
+        <field name="name">days</field>
+        <field name="description">Number of days to look back for recent orders (default: 30)</field>
+        <field name="required" eval="False"/>
+        <field name="sequence">10</field>
+    </record>
+
+    <!-- 10. Advanced EChart: Word Cloud -->
+    <record id="prompt_create_wordcloud_dashboard" model="mcp.prompt">
+        <field name="name">create_word_cloud</field>
+        <field name="title">Word Cloud Dashboard</field>
+        <field name="description">Create a word cloud visualization from Odoo data using echarts-wordcloud extension</field>
+        <field name="sequence">130</field>
+        <field name="share_with_all_users">True</field>
+        <field name="template">Create an interactive word cloud visualization using the echarts-wordcloud extension.
+
+**Data Source:** {{data_source}}
+
+**IMPORTANT GUIDELINES:**
+
+1. **Data Code (Python):**
+   - Extract text data from the specified source (e.g., product names, customer names, tags, descriptions)
+   - Count word frequencies or use values as weights
+   - Return data as array of {name, value} objects: `[{"name": "word", "value": count}, ...]`
+   - Clean the data: remove common stop words, normalize case if needed
+
+2. **Chart Options:**
+   - Use echarts-wordcloud series type: `"type": "wordCloud"`
+   - Configure shape (circle, cardioid, diamond, triangle, star, etc.)
+   - Set color range for visual appeal (consider using Odoo purple #714B67 as base)
+   - Configure rotation range for dynamic appearance
+   - Set appropriate size range based on data variance
+
+3. **Interactivity:**
+   - Add click handler using post_init_js that logs or alerts the clicked word and its value
+   - Example: `chart.on('click', (params) => alert(params.name + ': ' + params.value));`
+
+**Example chart_options structure:**
+```json
+{
+  "series": [{
+    "type": "wordCloud",
+    "shape": "circle",
+    "gridSize": 8,
+    "sizeRange": [12, 60],
+    "rotationRange": [-90, 90],
+    "textStyle": {
+      "fontFamily": "sans-serif",
+      "fontWeight": "bold"
+    },
+    "data": "$data.words"
+  }]
+}
+```
+
+Set `share_with_all_users: true` so the dashboard is accessible.</field>
+    </record>
+
+    <record id="prompt_create_wordcloud_arg_source" model="mcp.prompt.argument">
+        <field name="prompt_id" ref="prompt_create_wordcloud_dashboard"/>
+        <field name="name">data_source</field>
+        <field name="description">What to visualize (e.g., "product names", "customer company names", "sale order descriptions", "product categories")</field>
+        <field name="required" eval="True"/>
+        <field name="sequence">10</field>
+    </record>
+
+    <!-- 11. Snake Game Web App (manage_webapp) -->
+    <record id="prompt_create_snake_game" model="mcp.prompt">
+        <field name="name">create_snake_game</field>
+        <field name="title">Snake Game Web App</field>
+        <field name="description">Create a polished Snake game web app with persistent user stats using the manage_webapp tool</field>
+        <field name="sequence">140</field>
+        <field name="share_with_all_users">True</field>
+        <field name="template">Create a polished, fully playable Snake game web application using the manage_webapp tool.
+
+**GAME REQUIREMENTS:**
+
+1. **Gameplay:**
+   - Classic snake movement on a grid using arrow keys AND WASD
+   - Snake grows when eating food
+   - Game ends on wall collision or self-collision
+   - Increasing speed as the score grows (start slow, gradually get faster)
+   - Smooth game loop using requestAnimationFrame or setInterval
+   - Pause/resume with spacebar
+   - Show current score and current high score during gameplay
+
+2. **Visual Style:** {{style}}
+   - Use canvas or styled divs for the game grid
+   - Animated food items (pulse or glow effect)
+   - Snake should have a visible head distinct from its body
+   - Smooth, satisfying visuals — not a bare-bones prototype
+   - Responsive layout that works on different screen sizes
+
+3. **User Stats (persistent via storage helper):**
+   - Track and persist using the storage helper: games_played, total_score, high_score, best_length, total_food_eaten
+   - Update stats at the end of each game
+   - Show the current user's name from the user prop
+
+4. **Pages:**
+   - **Game page (/):** The main snake game with live score display, high score display, and controls hint
+   - **Stats page (/stats):** Show all persistent stats in a clean dashboard layout — games played, high score, best snake length, total food eaten, average score per game
+   - Navigation between pages using Link from React Router
+
+5. **Game Over:**
+   - Show a game over overlay/modal with final score, whether it's a new high score, and a "Play Again" button
+   - Auto-save stats on game over
+
+**TECHNICAL NOTES:**
+- Use globalState for game state (running, paused, score, etc.)
+- Use the storage helper for persistent stats (storage.get, storage.set)
+- Use the user prop to show the player's name
+- Keep the game loop clean — separate game logic from rendering
+- Use Tailwind for layout and styling</field>
+    </record>
+
+    <record id="prompt_create_snake_game_arg_style" model="mcp.prompt.argument">
+        <field name="prompt_id" ref="prompt_create_snake_game"/>
+        <field name="name">style</field>
+        <field name="description">Visual theme for the game (e.g., "retro neon arcade", "minimal dark mode", "cyberpunk", "pastel cute"). Defaults to dark neon arcade style if not specified.</field>
+        <field name="required" eval="False"/>
+        <field name="sequence">10</field>
+    </record>
+
+</odoo>
+

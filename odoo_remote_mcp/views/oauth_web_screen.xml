@@ -1,0 +1,436 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <!-- OAuth Consent Template - Uses web.layout directly to avoid website module dependency -->
+  <template id="oauth_consent" name="MCP OAuth Consent">
+    <t t-call="web.layout">
+      <t t-set="head">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <link rel="stylesheet" href="/web/static/lib/bootstrap/css/bootstrap.css"/>
+        <link rel="stylesheet" href="/web/static/src/libs/fontawesome/css/font-awesome.css"/>
+        <style>
+          * { box-sizing: border-box; }
+          body {
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+          }
+          .oauth-container {
+            min-height: 100vh;
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-align: center;
+            -ms-flex-align: center;
+            align-items: center;
+            -webkit-box-pack: center;
+            -ms-flex-pack: center;
+            justify-content: center;
+            padding: 16px;
+          }
+          .oauth-card {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 420px;
+          }
+          .oauth-header {
+            background-color: #714B67;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+          }
+          .oauth-header img {
+            max-height: 36px;
+            margin-bottom: 10px;
+          }
+          .oauth-header h4 {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 600;
+          }
+          .oauth-body {
+            padding: 20px;
+          }
+          .client-info {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #eee;
+          }
+          .client-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 4px;
+            word-break: break-word;
+          }
+          .client-request {
+            color: #666;
+            font-size: 0.95rem;
+          }
+          .security-info {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 16px;
+            font-size: 0.8rem;
+          }
+          .security-item {
+            margin-bottom: 6px;
+            word-break: break-all;
+          }
+          .security-item:last-child {
+            margin-bottom: 0;
+          }
+          .security-item i {
+            width: 18px;
+            display: inline-block;
+            color: #888;
+          }
+          .security-item .label {
+            color: #666;
+          }
+          .security-item .value {
+            color: #333;
+            font-weight: 500;
+          }
+          .localhost-warning {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 6px;
+            padding: 10px 12px;
+            margin-bottom: 16px;
+            font-size: 0.85rem;
+            color: #856404;
+          }
+          .localhost-warning i {
+            margin-right: 8px;
+          }
+          .permissions-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #888;
+            margin-bottom: 10px;
+            font-weight: 600;
+          }
+          .permission-item {
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-align: start;
+            -ms-flex-align: start;
+            align-items: flex-start;
+            padding: 10px 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            margin-bottom: 8px;
+          }
+          .permission-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-align: center;
+            -ms-flex-align: center;
+            align-items: center;
+            -webkit-box-pack: center;
+            -ms-flex-pack: center;
+            justify-content: center;
+            margin-right: 12px;
+            -ms-flex-negative: 0;
+            flex-shrink: 0;
+            font-size: 14px;
+          }
+          .permission-icon.read {
+            background: #e3f2fd;
+            color: #1976d2;
+          }
+          .permission-icon.write {
+            background: #fff3e0;
+            color: #f57c00;
+          }
+          .permission-icon.execute {
+            background: #fce4ec;
+            color: #c2185b;
+          }
+          .permission-content {
+            -webkit-box-flex: 1;
+            -ms-flex: 1;
+            flex: 1;
+            min-width: 0;
+          }
+          .permission-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.9rem;
+          }
+          .permission-desc {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 2px;
+          }
+          .button-group {
+            margin-top: 20px;
+          }
+          .btn-authorize {
+            background-color: #714B67;
+            border: none;
+            color: #fff;
+            padding: 12px 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 6px;
+            width: 100%;
+            cursor: pointer;
+            margin-bottom: 10px;
+          }
+          .btn-authorize:hover:not(:disabled) {
+            background-color: #5a3c53;
+          }
+          .btn-authorize:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+          }
+          .btn-deny {
+            background: #fff;
+            border: 1px solid #ccc;
+            color: #666;
+            padding: 10px 20px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            border-radius: 6px;
+            width: 100%;
+            cursor: pointer;
+          }
+          .btn-deny:hover:not(:disabled) {
+            border-color: #999;
+            color: #333;
+          }
+          .btn-deny:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+          }
+          .oauth-footer {
+            background: #f8f9fa;
+            padding: 12px 20px;
+            text-align: center;
+            border-top: 1px solid #eee;
+            border-radius: 0 0 8px 8px;
+            font-size: 0.85rem;
+            color: #666;
+          }
+          .oauth-footer a {
+            color: #714B67;
+            text-decoration: none;
+          }
+          .oauth-footer a:hover {
+            text-decoration: underline;
+          }
+          .spinner-border {
+            width: 1rem;
+            height: 1rem;
+            border-width: 2px;
+            vertical-align: middle;
+            margin-right: 6px;
+          }
+          /* Mobile adjustments */
+          @media (max-width: 480px) {
+            .oauth-container {
+              padding: 0;
+              align-items: stretch;
+            }
+            .oauth-card {
+              max-width: none;
+              border-radius: 0;
+              border-left: none;
+              border-right: none;
+              min-height: 100vh;
+            }
+            .oauth-header {
+              border-radius: 0;
+            }
+            .oauth-footer {
+              border-radius: 0;
+            }
+          }
+        </style>
+      </t>
+      <div class="oauth-container">
+        <div class="oauth-card">
+          <div class="oauth-header">
+            <img src="/odoo_remote_mcp/static/img/odoomcp_oauth_icon.png" alt="Odoo"/>
+            <h4>Authorize Application</h4>
+          </div>
+          <div class="oauth-body">
+            <div class="client-info">
+              <div class="client-name" t-esc="client.client_name"/>
+              <div class="client-request">wants to access your Odoo account</div>
+            </div>
+
+            <!-- Localhost Warning (per MCP spec) -->
+            <t t-set="is_localhost" t-value="'localhost' in redirect_uri or '127.0.0.1' in redirect_uri"/>
+            <t t-if="is_localhost">
+              <div class="localhost-warning">
+                <i class="fa fa-exclamation-triangle" title="Warning"/>
+                <strong>Local Application:</strong> Only authorize if you initiated this request.
+              </div>
+            </t>
+
+            <!-- Security Info -->
+            <div class="security-info">
+              <div class="security-item">
+                <i class="fa fa-arrow-right" title="Redirect"/>
+                <span class="label">Redirect: </span>
+                <span class="value" t-esc="redirect_uri"/>
+              </div>
+              <t t-if="resource">
+                <div class="security-item">
+                  <i class="fa fa-server" title="Resource"/>
+                  <span class="label">Resource: </span>
+                  <span class="value" t-esc="resource"/>
+                </div>
+              </t>
+            </div>
+
+            <!-- Permissions -->
+            <div class="permissions-title">Permissions Requested</div>
+            <t t-foreach="scopes" t-as="scope_item">
+              <t t-set="scope_key" t-value="scope_item[0]"/>
+              <div class="permission-item">
+                <t t-if="scope_key == 'odoo.read'">
+                  <div class="permission-icon read">
+                    <i class="fa fa-eye" title="Read"/>
+                  </div>
+                  <div class="permission-content">
+                    <div class="permission-title">Read Access</div>
+                    <div class="permission-desc">View records and search data</div>
+                  </div>
+                </t>
+                <t t-elif="scope_key == 'odoo.write'">
+                  <div class="permission-icon write">
+                    <i class="fa fa-pencil" title="Write"/>
+                  </div>
+                  <div class="permission-content">
+                    <div class="permission-title">Write Access</div>
+                    <div class="permission-desc">Create, update, and delete records</div>
+                  </div>
+                </t>
+                <t t-elif="scope_key == 'odoo.execute'">
+                  <div class="permission-icon execute">
+                    <i class="fa fa-cogs" title="Execute"/>
+                  </div>
+                  <div class="permission-content">
+                    <div class="permission-title">Execute Methods</div>
+                    <div class="permission-desc">Call server actions and methods</div>
+                  </div>
+                </t>
+                <t t-elif="scope_key == 'offline_access'">
+                  <div class="permission-icon read">
+                    <i class="fa fa-refresh" title="Offline"/>
+                  </div>
+                  <div class="permission-content">
+                    <div class="permission-title">Offline Access</div>
+                    <div class="permission-desc">Stay connected with refresh tokens</div>
+                  </div>
+                </t>
+                <t t-else="">
+                  <div class="permission-icon read">
+                    <i class="fa fa-check" title="Scope"/>
+                  </div>
+                  <div class="permission-content">
+                    <div class="permission-title" t-esc="scope_key"/>
+                    <div class="permission-desc" t-esc="scope_item[1]"/>
+                  </div>
+                </t>
+              </div>
+            </t>
+
+            <!-- Action Form -->
+            <form method="post" action="/oauth/authorize" id="authForm">
+              <input type="hidden" name="response_type" value="code"/>
+              <input type="hidden" name="client_id" t-att-value="client.client_id"/>
+              <input type="hidden" name="redirect_uri" t-att-value="redirect_uri"/>
+              <input type="hidden" name="scope" t-att-value="scope"/>
+              <input type="hidden" name="state" t-att-value="state"/>
+              <input type="hidden" name="code_challenge" t-att-value="code_challenge"/>
+              <input type="hidden" name="code_challenge_method" t-att-value="code_challenge_method"/>
+              <input type="hidden" name="resource" t-att-value="resource"/>
+              <input type="hidden" name="action" value="authorize" id="actionInput"/>
+
+              <div class="button-group">
+                <button type="submit" class="btn-authorize" id="authorizeBtn">
+                  <span id="authBtnText">
+                    <i class="fa fa-check" title="Authorize"/> Authorize
+                  </span>
+                  <span id="authBtnSpinner" style="display: none;">
+                    <span class="spinner-border" role="status" aria-hidden="true"></span>
+                    Authorizing...
+                  </span>
+                </button>
+                <button type="button" class="btn-deny" id="denyBtn">
+                  <span id="denyBtnText">
+                    <i class="fa fa-times" title="Deny"/> Deny
+                  </span>
+                  <span id="denyBtnSpinner" style="display: none;">
+                    <span class="spinner-border" role="status" aria-hidden="true"></span>
+                    Denying...
+                  </span>
+                </button>
+              </div>
+            </form>
+          </div>
+          <div class="oauth-footer">
+            Logged in as <strong t-esc="request.env.user.name"/>.
+            <a t-att-href="switch_user_url">Not you?</a>
+          </div>
+        </div>
+      </div>
+      <script>
+        (function() {
+          var form = document.getElementById('authForm');
+          var authorizeBtn = document.getElementById('authorizeBtn');
+          var denyBtn = document.getElementById('denyBtn');
+          var actionInput = document.getElementById('actionInput');
+
+          function disableButtons() {
+            authorizeBtn.disabled = true;
+            denyBtn.disabled = true;
+          }
+
+          function resetButtons() {
+            authorizeBtn.disabled = false;
+            denyBtn.disabled = false;
+            document.getElementById('authBtnText').style.display = 'inline';
+            document.getElementById('authBtnSpinner').style.display = 'none';
+            document.getElementById('denyBtnText').style.display = 'inline';
+            document.getElementById('denyBtnSpinner').style.display = 'none';
+          }
+
+          form.addEventListener('submit', function() {
+            disableButtons();
+            document.getElementById('authBtnText').style.display = 'none';
+            document.getElementById('authBtnSpinner').style.display = 'inline';
+            setTimeout(resetButtons, 10000);
+          });
+
+          denyBtn.addEventListener('click', function() {
+            disableButtons();
+            document.getElementById('denyBtnText').style.display = 'none';
+            document.getElementById('denyBtnSpinner').style.display = 'inline';
+            actionInput.value = 'deny';
+            form.submit();
+            setTimeout(resetButtons, 10000);
+          });
+        })();
+      </script>
+    </t>
+  </template>
+
+</odoo>

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Execution Log List View -->
+    <record id="mcp_execution_log_view_list" model="ir.ui.view">
+        <field name="name">mcp.execution.log.list</field>
+        <field name="model">mcp.execution.log</field>
+        <field name="arch" type="xml">
+            <tree string="Execution Logs" decoration-danger="not success" decoration-success="success" create="0">
+                <field name="create_date"/>
+                <field name="user_id"/>
+                <field name="client_id"/>
+                <field name="api_key_id"/>
+                <field name="tool_name"/>
+                <field name="success"/>
+                <field name="execution_time" widget="float_time"/>
+                <field name="ip_address"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Execution Log Form View -->
+    <record id="mcp_execution_log_view_form" model="ir.ui.view">
+        <field name="name">mcp.execution.log.form</field>
+        <field name="model">mcp.execution.log</field>
+        <field name="arch" type="xml">
+            <form string="Execution Log" edit="0" create="0">
+                <sheet>
+                    <group>
+                        <group string="Execution Info">
+                            <field name="create_date"/>
+                            <field name="user_id"/>
+                            <field name="client_id"/>
+                            <field name="api_key_id"/>
+                            <field name="tool_name"/>
+                            <field name="ip_address"/>
+                        </group>
+                        <group string="Result">
+                            <field name="success"/>
+                            <field name="execution_time"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Code" name="code" invisible="not code">
+                            <field name="code" widget="code" options="{'mode': 'python'}"/>
+                        </page>
+                        <page string="Parameters" name="parameters" invisible="not parameters">
+                            <field name="parameters" widget="code" options="{'mode': 'js'}"/>
+                        </page>
+                        <page string="Result" name="result" invisible="not result">
+                            <field name="result" widget="code" options="{'mode': 'js'}"/>
+                        </page>
+                        <page string="Error" name="error" invisible="not error">
+                            <field name="error"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Execution Log Search View -->
+    <!--
+    <record id="mcp_execution_log_view_search" model="ir.ui.view">
+        <field name="name">mcp.execution.log.search</field>
+        <field name="model">mcp.execution.log</field>
+        <field name="arch" type="xml">
+            <search string="Search Execution Logs">
+                <field name="user_id"/>
+                <field name="client_id"/>
+                <field name="tool_name"/>
+                <filter string="Successful" name="success" domain="[('success', '=', True)]"/>
+                <filter string="Failed" name="failed" domain="[('success', '=', False)]"/>
+                <separator/>
+                <filter string="Today" name="today" domain="[('create_date', '>=', datetime.datetime.combine(context_today(), datetime.time(0, 0, 0)))]"/>
+                <filter string="This Week" name="week" domain="[('create_date', '>=', (context_today() - datetime.timedelta(days=7)))]"/>
+                <separator/>
+                <filter string="execute_orm" name="execute_orm" domain="[('tool_name', '=', 'execute_orm')]"/>
+                <group string="Group By">
+                    <filter string="User" name="group_user" context="{'group_by': 'user_id'}"/>
+                    <filter string="Client" name="group_client" context="{'group_by': 'client_id'}"/>
+                    <filter string="Tool" name="group_tool" context="{'group_by': 'tool_name'}"/>
+                    <filter string="Date" name="group_date" context="{'group_by': 'create_date:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    -->
+
+    <!-- Execution Log Action -->
+    <record id="action_mcp_execution_log" model="ir.actions.act_window">
+        <field name="name">Execution Logs</field>
+        <field name="res_model">mcp.execution.log</field>
+        <field name="view_mode">list,form</field>
+        <!-- <field name="search_view_id" ref="mcp_execution_log_view_search"/> -->
+        <field name="context">{'search_default_today': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No execution logs yet
+            </p>
+            <p>
+                Execution logs track all tool calls made by AI agents via MCP.
+            </p>
+        </field>
+    </record>
+</odoo>

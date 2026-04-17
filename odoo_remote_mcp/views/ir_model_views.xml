@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Extend ir.model search view to add modules field -->
+    <record id="view_model_search_mcp" model="ir.ui.view">
+        <field name="name">ir.model.search.mcp</field>
+        <field name="model">ir.model</field>
+        <field name="inherit_id" ref="base.view_model_search"/>
+        <field name="arch" type="xml">
+            <field name="model" position="after">
+                <field name="modules" string="Module"
+                       filter_domain="[('modules', 'ilike', self)]"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- Extend ir.model list view to show modules column -->
+    <record id="view_model_tree_mcp" model="ir.ui.view">
+        <field name="name">ir.model.tree.mcp</field>
+        <field name="model">ir.model</field>
+        <field name="inherit_id" ref="base.view_model_tree"/>
+        <field name="arch" type="xml">
+            <field name="transient" position="after">
+                <field name="modules" optional="show"/>
+            </field>
+        </field>
+    </record>
+</odoo>
