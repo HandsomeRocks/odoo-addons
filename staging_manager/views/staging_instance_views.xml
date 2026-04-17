@@ -11,6 +11,8 @@
                     group_delete="false" group_edit="false"
                     records_draggable="false">
                 <field name="status"/>
+                <progressbar field="status"
+                             colors='{"running": "success", "building": "warning", "pending": "warning", "updating": "warning", "stopped": "danger", "error": "danger", "destroying": "muted"}'/>
                 <field name="status_color"/>
                 <field name="test_status"/>
                 <field name="test_status_color"/>
@@ -121,7 +123,7 @@
                 <field name="is_production" invisible="1"/>
                 <div class="alert alert-warning text-center fw-bold" role="alert"
                      invisible="not is_production">
-                    &#9889; PRODUCTION INSTANCE — Changes here affect the live system
+                    &#9889; PRODUCTION INSTANCE
                 </div>
                 <header>
                     <button name="action_start" type="object"
