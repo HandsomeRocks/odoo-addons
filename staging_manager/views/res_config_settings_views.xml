@@ -9,7 +9,7 @@
         <field name="arch" type="xml">
             <xpath expr="//form" position="inside">
                 <app data-string="Staging Manager" string="Staging Manager"
-                     groups="base.group_system">
+                     data-key="staging_manager" groups="base.group_system">
                     <block title="Connection" name="staging_connection">
                         <setting string="Manager URL"
                                  help="Full URL of the Staging Manager web app">
