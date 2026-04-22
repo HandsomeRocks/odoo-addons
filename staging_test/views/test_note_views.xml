@@ -67,7 +67,7 @@
               sequence="999"/>
 
     <menuitem id="menu_staging_test_notes"
-              name="Test Notes"
+              name="New Test Notes"
               parent="menu_staging_test_root"
               action="action_staging_test_note"
               sequence="10"/>
